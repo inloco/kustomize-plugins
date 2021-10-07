@@ -64,7 +64,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ jobs.release.outputs.upload-url }}
+          upload_url: ${{ needs.release.outputs.upload-url }}
           asset_path: ./${{ matrix.os.name }}/plugin
           asset_name: plugin-${{ matrix.os.kernel }}-amd64
           asset_content_type: application/octet-stream
