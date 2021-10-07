@@ -121,6 +121,7 @@ func makeRoleBinding(accessLevel accessLevel, namespace *Namespace) ([]byte, err
 	case readWrite:
 		names = namespace.AccessControl.ReadWrite
 	}
+	names = append(names, fmt.Sprintf("%s:%s", namespace.GetName(), accessLevel.shortName()))
 
 	return yaml.Marshal(rbacv1.RoleBinding{
 		TypeMeta: metav1.TypeMeta{
@@ -136,11 +137,7 @@ func makeRoleBinding(accessLevel accessLevel, namespace *Namespace) ([]byte, err
 			Kind:     reflect.TypeOf(rbacv1.ClusterRole{}).Name(),
 			Name:     accessLevel.longName(),
 		},
-		Subjects: append(makeSubjects(names), rbacv1.Subject{
-			APIGroup: rbacv1.GroupName,
-			Kind:     rbacv1.GroupKind,
-			Name:     fmt.Sprintf("%s:%s", namespace.GetName(), accessLevel.shortName()),
-		}),
+		Subjects: makeSubjects(names),
 	})
 }
 
