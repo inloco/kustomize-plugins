@@ -1,100 +1,94 @@
 # Namespace Kustomize Generator Plugin
-It is a plugin for [Kustomize](https://github.com/kubernetes-sigs/kustomize) that allows you to use Kubernetes Secrets encrypted with [SOPS](https://github.com/mozilla/sops) as a generator.
+
+It is a plugin for [Kustomize](https://github.com/kubernetes-sigs/kustomize) that allows you to use Kubernetes Secrets
+encrypted with [SOPS](https://github.com/mozilla/sops) as a generator.
 
 ## Getting Started
 
-### Install
-To install this plugin on Kustomize, download the binary to Kustomize Plugin folder with `apiVersion: incognia.com/v1` and `kind: Namespace`. Then make it executable.
+### Setup
+
+To install this plugin on Kustomize, download the binary to Kustomize Plugin folder
+with `apiVersion: incognia.com/v1alpha1` and `kind: Namespace`. Then make it executable.
 
 #### Linux 64-bits
+
 ```bash
-PLACEMENT=${XDG_CONFIG_HOME:-$HOME/.config}/kustomize/plugin/incognia.com/v1alpha1/sops
-
+PLACEMENT=${XDG_CONFIG_HOME:-$HOME/.config}/kustomize/plugin/incognia.com/v1alpha1/namespace
 mkdir -p $PLACEMENT
-
-PLUGIN=$PLACEMENT/SOPS
-
-wget -O $PLUGIN https://github.com/inloco/sops-kustomize-generator-plugin/releases/download/v1.1.1/plugin-linux-amd64
-
+PLUGIN=$PLACEMENT/Namespace
+wget -O $PLUGIN https://github.com/inloco/namespace-kustomize-generator-plugins/releases/download/v0.0.2/namespace-linux-amd64
 chmod +x $PLUGIN
 ```
 
 #### macOS 64-bits
+
 ```bash
-PLACEMENT=${XDG_CONFIG_HOME:-$HOME/.config}/kustomize/plugin/incognia.com/v1/sops
-
+PLACEMENT=${XDG_CONFIG_HOME:-$HOME/.config}/kustomize/plugin/incognia.com/v1alpha1/namespace
 mkdir -p $PLACEMENT
-
-PLUGIN=$PLACEMENT/SOPS
-
-wget -O $PLUGIN https://github.com/inloco/sops-kustomize-generator-plugin/releases/download/v1.1.1/plugin-darwin-amd64
-
+PLUGIN=$PLACEMENT/Namespace
+wget -O $PLUGIN https://github.com/inloco/iac-kustomize-generator-plugins/releases/download/v0.0.2/namespace-darwin-amd64
 chmod +x $PLUGIN
 ```
 
 #### Manual Build and Install for Other Systems and/or Architectures
+
 ```bash
-git clone https://github.com/inloco/sops-kustomize-generator-plugin
-
-cd sops-kustomize-generator-plugin
-
+git clone https://github.com/inloco/iac-kustomize-generator-plugins
+cd iac-kustomize-generator-plugins
 go get -d -v ./...
-
 go build -a -installsuffix cgo -ldflags '-extldflags "-static" -s -w' -tags netgo -v ./...
-
-PLACEMENT=${XDG_CONFIG_HOME:-$HOME/.config}/kustomize/plugin/incognia.com/v1/namespace
-
+PLACEMENT=${XDG_CONFIG_HOME:-$HOME/.config}/kustomize/plugin/incognia.com/v1alpha1/namespace
 mkdir -p $PLACEMENT
-
-mv ./sops-kustomize-generator-plugin $PLACEMENT/Namespace
-
+mv ./namespace-kustomize-generator-plugins $PLACEMENT/Namespace
 cd ..
-
-rm -fR sops-kustomize-generator-plugin
+rm -fR iac-kustomize-generator-plugins
 ```
 
-### Using
+### Example
 
-We can start with a regular Kubernetes Secret in its YAML format.
+We can start with a regular Kubernetes Namespace in its YAML format.
+
 ```yaml
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: mysecret
-type: Opaque
-data:
-  username: YWRtaW4=
-  password: MWYyZDFlMmU2N2Rm
+  name: my-namespace
 ```
 
-To convert it to a file that will be processed by the plugin, we replace `apiVersion: v1` with `apiVersion: incognia.com/v1` and `kind: Secret` with `kind: Namespace`.
+To convert it to a file that will be processed by the plugin, we replace `apiVersion: v1`
+with `apiVersion: incognia.com/v1`.
+
+By doing this, you'll have access to the `accessControl` attribute. In it, you can define which groups will
+have `read-only` and `read-write` access to the namespace.
+
 ```yaml
-apiVersion: incognia.com/v1
+apiVersion: incognia.com/v1alpha1
 kind: Namespace
 metadata:
-  name: mysecret
-type: Opaque
-data:
-  username: YWRtaW4=
-  password: MWYyZDFlMmU2N2Rm
+  name: my-namespace
+accessControl:
+  readOnly:
+    - security@0
+  readWrite:
+    - sre@0
+    - infrastructure@0
 ```
 
-Finally we encrypt it using Namespace with the following command:
-```bash
-sops --encrypt --encrypted-regex '^(data|stringData)$' --in-place ./secret.yaml
-```
+Now we can specify `./namespace.yaml` as a generator on `kustomization.yaml`:
 
-Now we can specify `./secret.yaml` as a generator on `kustomization.yaml`:
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 generators:
-  - ./secret.yaml
+  - ./namespace.yaml
 ```
 
 ## Notes
+
 - Remember to use `--enable-alpha-plugins` flag when running `kustomize build`.
-- You may need to use environment variables, such as `AWS_PROFILE`, to configure Namespace decryption when running Kustomize.
-- Integrity checks are disabled on Namespace decryption, this is done to prevent integrity failures due to Kustomize sortting the keys of original YAML file.
-- This documentation assumes that you are familiar with [Kustomize](https://github.com/kubernetes-sigs/kustomize) and [Namespace](https://github.com/mozilla/sops), read their documentation if necessary.
-- To make the generator behave like a patch, you might want to set `kustomize.config.k8s.io/behavior` annotation to `"merge"`. The other internal annotations described on [Kustomize Plugins Guide](https://kubernetes-sigs.github.io/kustomize/guides/plugins/#generator-options) are also supported.
+- This documentation assumes that you are familiar with [Kustomize](https://github.com/kubernetes-sigs/kustomize), read
+  their documentation if necessary.
+- To make the generator behave like a patch, you might want to set `kustomize.config.k8s.io/behavior` annotation
+  to `"merge"`. The other internal annotations described
+  on [Kustomize Plugins Guide](https://kubernetes-sigs.github.io/kustomize/guides/plugins/#generator-options) are also
+  supported.
