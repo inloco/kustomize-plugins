@@ -23,7 +23,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v1.0.0
         with:
-          name: ${{ runner.os }}
+          name: ${{ matrix.plugin }}-${{ runner.os }}
           path: ${{ matrix.plugin }}/plugin
   release:
     name: Release
@@ -55,16 +55,16 @@ jobs:
         plugin:
           - namespace
     steps:
-      - name: Download ${{ matrix.os.name }} Artifact
+      - name: Download ${{ matrix.plugin }}-${{ matrix.os.name }} Artifact
         uses: actions/download-artifact@v1.0.0
         with:
-          name: ${{ matrix.os.name }}
-      - name: Upload ${{ matrix.os.name }} Release Asset
+          name: ${{ matrix.plugin }}-${{ matrix.os.name }}
+      - name: Upload ${{ matrix.plugin }}-${{ matrix.os.name }} Release Asset
         uses: actions/upload-release-asset@v1.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.release.outputs.upload-url }}
           asset_path: ./${{ matrix.os.name }}/plugin
-          asset_name: plugin-${{ matrix.os.kernel }}-amd64
+          asset_name: ${{ matrix.plugin }}-${{ matrix.os.kernel }}-amd64
           asset_content_type: application/octet-stream
