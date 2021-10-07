@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -13,10 +14,37 @@ import (
 )
 
 const (
-	readOnlyName  = "read-only"
-	readWriteName = "read-write"
 	yamlSeparator = "---\n"
 )
+
+type accessLevel int
+
+const (
+	readOnly accessLevel = iota
+	readWrite
+)
+
+func (a accessLevel) longName() string {
+	switch a {
+	case readOnly:
+		return "read-only"
+	case readWrite:
+		return "read-write"
+	default:
+		panic(fmt.Sprintf("unknown access level %d", a))
+	}
+}
+
+func (a accessLevel) shortName() string {
+	switch a {
+	case readOnly:
+		return "ro"
+	case readWrite:
+		return "rw"
+	default:
+		panic(fmt.Sprintf("unknown access level %d", a))
+	}
+}
 
 type Namespace struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -51,13 +79,13 @@ func main() {
 	}
 	yamls = append(yamls, ns)
 
-	ro, err := makeRoleBinding(readOnlyName, &namespace)
+	ro, err := makeRoleBinding(readOnly, &namespace)
 	if err != nil {
 		return
 	}
 	yamls = append(yamls, ro)
 
-	rw, err := makeRoleBinding(readWriteName, &namespace)
+	rw, err := makeRoleBinding(readWrite, &namespace)
 	if err != nil {
 		return
 	}
@@ -85,22 +113,34 @@ func makeNamespace(namespace *Namespace) ([]byte, error) {
 	})
 }
 
-func makeRoleBinding(name string, namespace *Namespace) ([]byte, error) {
+func makeRoleBinding(accessLevel accessLevel, namespace *Namespace) ([]byte, error) {
+	var names []string
+	switch accessLevel {
+	case readOnly:
+		names = namespace.AccessControl.ReadOnly
+	case readWrite:
+		names = namespace.AccessControl.ReadWrite
+	}
+
 	return yaml.Marshal(rbacv1.RoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: rbacv1.SchemeGroupVersion.String(),
 			Kind:       reflect.TypeOf(rbacv1.RoleBinding{}).Name(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespace.Name,
-			Name:      name,
+			Namespace: namespace.GetName(),
+			Name:      accessLevel.longName(),
 		},
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: rbacv1.GroupName,
 			Kind:     reflect.TypeOf(rbacv1.ClusterRole{}).Name(),
-			Name:     name,
+			Name:     accessLevel.longName(),
 		},
-		Subjects: makeSubjects(namespace.AccessControl.ReadOnly),
+		Subjects: append(makeSubjects(names), rbacv1.Subject{
+			APIGroup: rbacv1.GroupName,
+			Kind:     rbacv1.GroupKind,
+			Name:     fmt.Sprintf("%s:%s", namespace.GetName(), accessLevel.shortName()),
+		}),
 	})
 }
 
