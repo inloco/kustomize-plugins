@@ -1,5 +1,5 @@
 FROM golang:1.16-alpine
-WORKDIR /go/src/github.com/inloco/iac-kustomize-generator-plugin
+WORKDIR /go/src/github.com/inloco/iac-kustomize-generator-plugins
 COPY . .
 ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on
 RUN apk add git && \

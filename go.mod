@@ -1,4 +1,4 @@
-module github.com/inloco/iac-kustomize-generator-plugin
+module github.com/inloco/iac-kustomize-generator-plugins
 
 go 1.16
 
