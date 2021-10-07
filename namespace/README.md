@@ -56,7 +56,7 @@ metadata:
 ```
 
 To convert it to a file that will be processed by the plugin, we replace `apiVersion: v1`
-with `apiVersion: incognia.com/v1`.
+with `apiVersion: incognia.com/v1alpha1`.
 
 By doing this, you'll have access to the `accessControl` attribute. In it, you can define which groups will
 have `read-only` and `read-write` access to the namespace.
