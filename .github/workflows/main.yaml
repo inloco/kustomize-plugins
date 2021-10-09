@@ -9,7 +9,7 @@ jobs:
           - macos-latest
           - ubuntu-latest
         plugin:
-          - clusterrole
+          - clusterroles
           - namespace
           - unnamespaced
     runs-on: ${{ matrix.platform }}
@@ -55,7 +55,7 @@ jobs:
           - name: Linux
             kernel: linux
         plugin:
-          - clusterrole
+          - clusterroles
           - namespace
           - unnamespaced
     steps:
