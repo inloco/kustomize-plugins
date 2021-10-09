@@ -105,7 +105,7 @@ func makeClusterRoleBinding(accessLevel accessLevel, namespace *Namespace) ([]by
 	return yaml.Marshal(rbacv1.ClusterRoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: rbacv1.SchemeGroupVersion.String(),
-			Kind:       reflect.TypeOf(rbacv1.RoleBinding{}).Name(),
+			Kind:       reflect.TypeOf(rbacv1.ClusterRoleBinding{}).Name(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: accessLevel.longName(),

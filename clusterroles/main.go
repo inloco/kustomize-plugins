@@ -88,7 +88,6 @@ func buildConfig() (*rest.Config, error) {
 	}
 
 	return clientcmd.BuildConfigFromFlags("", filepath.Join(homedir.HomeDir(), ".kube", "config"))
-
 }
 
 func buildIndex() (GroupIndex, error) {
