@@ -7,7 +7,6 @@ import (
 	"os"
 	"reflect"
 
-	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
@@ -27,9 +26,9 @@ const (
 func (a accessLevel) longName() string {
 	switch a {
 	case readOnly:
-		return "namespaced-ro"
+		return "unnamespaced-ro"
 	case readWrite:
-		return "namespaced-rw"
+		return "unnamespaced-rw"
 	default:
 		panic(fmt.Sprintf("unknown access level %d", a))
 	}
@@ -47,10 +46,8 @@ func (a accessLevel) shortName() string {
 }
 
 type Namespace struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              corev1.NamespaceSpec   `json:"spec,omitempty"`
-	AccessControl     NamespaceAccessControl `json:"accessControl,omitempty"`
+	metav1.TypeMeta `json:",inline"`
+	AccessControl   NamespaceAccessControl `json:"accessControl,omitempty"`
 }
 
 type NamespaceAccessControl struct {
@@ -73,19 +70,13 @@ func main() {
 
 	var yamls [][]byte
 
-	ns, err := makeNamespace(&namespace)
-	if err != nil {
-		return
-	}
-	yamls = append(yamls, ns)
-
-	ro, err := makeRoleBinding(readOnly, &namespace)
+	ro, err := makeClusterRoleBinding(readOnly, &namespace)
 	if err != nil {
 		return
 	}
 	yamls = append(yamls, ro)
 
-	rw, err := makeRoleBinding(readWrite, &namespace)
+	rw, err := makeClusterRoleBinding(readWrite, &namespace)
 	if err != nil {
 		return
 	}
@@ -102,18 +93,7 @@ func main() {
 	}
 }
 
-func makeNamespace(namespace *Namespace) ([]byte, error) {
-	return yaml.Marshal(corev1.Namespace{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: corev1.SchemeGroupVersion.String(),
-			Kind:       reflect.TypeOf(corev1.Namespace{}).Name(),
-		},
-		ObjectMeta: namespace.ObjectMeta,
-		Spec:       namespace.Spec,
-	})
-}
-
-func makeRoleBinding(accessLevel accessLevel, namespace *Namespace) ([]byte, error) {
+func makeClusterRoleBinding(accessLevel accessLevel, namespace *Namespace) ([]byte, error) {
 	var names []string
 	switch accessLevel {
 	case readOnly:
@@ -121,16 +101,14 @@ func makeRoleBinding(accessLevel accessLevel, namespace *Namespace) ([]byte, err
 	case readWrite:
 		names = namespace.AccessControl.ReadWrite
 	}
-	names = append(names, fmt.Sprintf("%s:%s", namespace.GetName(), accessLevel.shortName()))
 
-	return yaml.Marshal(rbacv1.RoleBinding{
+	return yaml.Marshal(rbacv1.ClusterRoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: rbacv1.SchemeGroupVersion.String(),
 			Kind:       reflect.TypeOf(rbacv1.RoleBinding{}).Name(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespace.GetName(),
-			Name:      accessLevel.longName(),
+			Name: accessLevel.longName(),
 		},
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: rbacv1.GroupName,

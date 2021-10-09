@@ -1,32 +1,18 @@
-# Namespace Kustomize Generator Plugin
+# Unnamespaced Kustomize Generator Plugin
 
-It is a plugin for [Kustomize](https://github.com/kubernetes-sigs/kustomize) that allows you to generate a Namespace
-with its access control definitions.
+It is a plugin for [Kustomize](https://github.com/kubernetes-sigs/kustomize) that allows you to generate
+ClusterRoleBindings to `unnamedspaced-ro` and `unnamedspaced-rw` ClusterRoles.
 
 ## Getting Started
 
 ### Example
 
-We can start with a regular Kubernetes Namespace in its YAML format.
-
-```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: my-namespace
-```
-
-To convert it to a file that will be processed by the plugin, we replace `apiVersion: v1`
-with `apiVersion: incognia.com/v1alpha1`.
-
-By doing this, you'll have access to the `accessControl` attribute. In it, you can define which groups will
-have `read-only` and `read-write` access to the namespace.
+The plugin's manifest is pretty simple, it only has the `accessControl` attribute. In it, you can define which groups
+will have `read-only` and `read-write` access to all unnamespaced resources.
 
 ```yaml
 apiVersion: incognia.com/v1alpha1
-kind: Namespace
-metadata:
-  name: my-namespace
+kind: Unnamespaced
 accessControl:
   readOnly:
     - security:eng-0
@@ -35,13 +21,13 @@ accessControl:
     - infrastructure:eng-0
 ```
 
-Now we can specify `./namespace.yaml` as a generator on `kustomization.yaml`:
+Now we can specify `./unnamespaced.yaml` as a generator on `kustomization.yaml`:
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 generators:
-  - ./namespace.yaml
+  - ./unnamespaced.yaml
 ```
 
 ## Notes
