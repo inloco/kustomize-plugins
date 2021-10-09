@@ -7,4 +7,6 @@ RUN apk add git && \
     go install -a -installsuffix cgo -ldflags '-extldflags "-static" -s -w' -tags netgo -v ./...
 
 FROM alpine:3.14
+COPY --from=0 /go/bin/sops-kustomize-generator-plugin /root/.config/kustomize/plugin/incognia.com/v1alpha1/clusterroles/ClusterRoles
 COPY --from=0 /go/bin/sops-kustomize-generator-plugin /root/.config/kustomize/plugin/incognia.com/v1alpha1/namespace/Namespace
+COPY --from=0 /go/bin/sops-kustomize-generator-plugin /root/.config/kustomize/plugin/incognia.com/v1alpha1/unnamespace/Unnamespace

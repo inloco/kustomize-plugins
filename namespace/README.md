@@ -3,9 +3,7 @@
 It is a plugin for [Kustomize](https://github.com/kubernetes-sigs/kustomize) that allows you to generate a Namespace
 with its access control definitions.
 
-## Getting Started
-
-### Example
+## Using
 
 We can start with a regular Kubernetes Namespace in its YAML format.
 
@@ -43,13 +41,3 @@ kind: Kustomization
 generators:
   - ./namespace.yaml
 ```
-
-## Notes
-
-- Remember to use `--enable-alpha-plugins` flag when running `kustomize build`.
-- This documentation assumes that you are familiar with [Kustomize](https://github.com/kubernetes-sigs/kustomize), read
-  their documentation if necessary.
-- To make the generator behave like a patch, you might want to set `kustomize.config.k8s.io/behavior` annotation
-  to `"merge"`. The other internal annotations described
-  on [Kustomize Plugins Guide](https://kubernetes-sigs.github.io/kustomize/guides/plugins/#generator-options) are also
-  supported.

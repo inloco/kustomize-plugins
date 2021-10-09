@@ -9,7 +9,9 @@ jobs:
           - macos-latest
           - ubuntu-latest
         plugin:
+          - clusterrole
           - namespace
+          - unnamespaced
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Set up Go 1.16
@@ -53,7 +55,9 @@ jobs:
           - name: Linux
             kernel: linux
         plugin:
+          - clusterrole
           - namespace
+          - unnamespaced
     steps:
       - name: Download ${{ matrix.plugin }}-${{ matrix.os.name }} Artifact
         uses: actions/download-artifact@v1.0.0

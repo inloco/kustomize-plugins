@@ -24,8 +24,23 @@ setup-environment:
 	ln -Fs ${SRC_PATH} ${MOD_PATH}
 .PHONY: setup-environment
 
-build: namespace/plugin unnamespaced/plugin clusterroles/plugin
-.PHONY: build
+test: setup-environment
+	@printf '${BOLD}${RED}make: *** [test]${RESET}${EOL}'
+	cd ${MOD_PATH} && \
+	go test           \
+		-v ./...
+.PHONY: test
+
+clusterroles/plugin: setup-environment
+	@printf '${BOLD}${RED}make: *** [clusterroles/plugin]${RESET}${EOL}'
+	cd ${MOD_PATH}                              && \
+	go build                                       \
+		-o 'clusterroles/plugin'                   \
+		-a                                         \
+		-installsuffix 'cgo'                       \
+		-gcflags 'all=-trimpath "${TMP_PATH}/src"' \
+		-v                                         \
+		./clusterroles
 
 namespace/plugin: setup-environment
 	@printf '${BOLD}${RED}make: *** [namespace/plugin]${RESET}${EOL}'
@@ -35,7 +50,7 @@ namespace/plugin: setup-environment
 		-a                                         \
 		-installsuffix 'cgo'                       \
 		-gcflags 'all=-trimpath "${TMP_PATH}/src"' \
-		-v 										   \
+		-v                                         \
 		./namespace
 
 unnamespaced/plugin: setup-environment
@@ -46,47 +61,32 @@ unnamespaced/plugin: setup-environment
 		-a                                         \
 		-installsuffix 'cgo'                       \
 		-gcflags 'all=-trimpath "${TMP_PATH}/src"' \
-		-v 										   \
+		-v                                         \
 		./unnamespaced
 
-clusterroles/plugin: setup-environment
-	@printf '${BOLD}${RED}make: *** [clusterroles/plugin]${RESET}${EOL}'
-	cd ${MOD_PATH}                              && \
-	go build                                       \
-		-o 'clusterroles/plugin'                   \
-		-a                                         \
-		-installsuffix 'cgo'                       \
-		-gcflags 'all=-trimpath "${TMP_PATH}/src"' \
-		-v 										   \
-		./clusterroles
+build: clusterroles/plugin namespace/plugin unnamespaced/plugin
+.PHONY: build
 
-test: setup-environment
-	@printf '${BOLD}${RED}make: *** [test]${RESET}${EOL}'
-	cd ${MOD_PATH} && \
-	go test           \
-		-v ./...
-.PHONY: test
+install-clusterroles: clusterroles/plugin
+	@printf '${BOLD}${RED}make: *** [install-clusterroles]${RESET}${EOL}'
+	mkdir -p ${PLACEMENT}/clusterroles
+	cp ./clusterroles/plugin ${PLACEMENT}/clusterroles/ClusterRoles
+.PHONY: install-clusterroles
 
-continuous-integration: test build
-.PHONY: continuous-integration
-
-install: build install-namespace install-unnamespaced install-clusterroles
-.PHONY: install
-
-install-namespace:
+install-namespace: namespace/plugin
 	@printf '${BOLD}${RED}make: *** [install-namespace]${RESET}${EOL}'
-	mkdir -p ${PLACEMENT}/namespaced
+	mkdir -p ${PLACEMENT}/namespace
 	cp ./namespace/plugin ${PLACEMENT}/namespace/Namespace
 .PHONY: install-namespace
 
-install-unnamespaced: setup-environment unnamespaced/plugin
+install-unnamespaced: unnamespaced/plugin
 	@printf '${BOLD}${RED}make: *** [install-unnamespaced]${RESET}${EOL}'
 	mkdir -p ${PLACEMENT}/unnamespaced
 	cp ./unnamespaced/plugin ${PLACEMENT}/unnamespaced/Unnamespaced
 .PHONY: install-unnamespaced
 
-install-clusterroles: setup-environment clusterroles/plugin
-	@printf '${BOLD}${RED}make: *** [install-clusterroles]${RESET}${EOL}'
-	mkdir -p ${PLACEMENT}/clusterroles
-	cp ./clusterroles/plugin ${PLACEMENT}/clusterroles/ClusterRoles
-.PHONY: install-clusterroles
+install: install-clusterroles install-namespace install-unnamespaced
+.PHONY: install
+
+continuous-integration: test build
+.PHONY: continuous-integration
