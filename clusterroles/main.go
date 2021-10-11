@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
@@ -12,15 +12,14 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/discovery"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 	"sigs.k8s.io/yaml"
 )
 
 const (
-	groupVersionSeparator = "/"
-	yamlSeparator         = "---\n"
+	separatorGV    = "/"
+	separatorPanic = ": "
+	separatorYAML  = "---\n"
 
 	verbGet   = "get"
 	verbList  = "list"
@@ -47,60 +46,87 @@ var (
 	}
 )
 
-type Namespaced bool
-type ResourceIndex map[string]Namespaced
-type GroupIndex map[string]ResourceIndex
+type ClusterRoles struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	KubeConfig        ClusterRolesKubeConfig `json:"kubeConfig,omitempty"`
+}
+
+type ClusterRolesKubeConfig struct {
+	LoadingRules *clientcmd.ClientConfigLoadingRules `json:"loadingRules,omitempty"`
+	Overrides    *clientcmd.ConfigOverrides          `json:"overrides,omitempty"`
+}
 
 func main() {
-	//filePath := os.Args[1]
-	filePath := os.Args[0]
+	filePath := os.Args[1]
 
-	index, err := buildIndex()
+	loadingRules, overrides, err := readClientConfigSettings(filePath)
 	if err != nil {
-		log.Panic(filePath, ": ", err)
+		log.Panic(filePath, separatorPanic, err)
+	}
+
+	deferredLoadingClientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, overrides)
+	clientConfig, err := deferredLoadingClientConfig.ClientConfig()
+	if err != nil {
+		log.Panic(filePath, separatorPanic, err)
+	}
+
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(clientConfig)
+	if err != nil {
+		log.Panic(filePath, separatorPanic, err)
+	}
+
+	index, err := buildIndex(discoveryClient)
+	if err != nil {
+		log.Panic(filePath, separatorPanic, err)
 	}
 
 	clusterRoles, err := makeClusterRoles(index)
 	if err != nil {
-		log.Panic(filePath, ": ", err)
+		log.Panic(filePath, separatorPanic, err)
 	}
 	canonicalizeClusterRoles(clusterRoles)
 
 	for _, clusterRole := range clusterRoles {
 		bytes, err := yaml.Marshal(clusterRole)
 		if err != nil {
-			log.Panic(filePath, ": ", err)
+			log.Panic(filePath, separatorPanic, err)
 		}
 
 		if _, err := os.Stdout.Write(bytes); err != nil {
-			log.Panic(filePath, ": ", err)
+			log.Panic(filePath, separatorPanic, err)
 		}
 
-		if _, err := os.Stdout.Write([]byte(yamlSeparator)); err != nil {
-			log.Panic(filePath, ": ", err)
+		if _, err := os.Stdout.Write([]byte(separatorYAML)); err != nil {
+			log.Panic(filePath, separatorPanic, err)
 		}
 	}
 }
 
-func buildConfig() (*rest.Config, error) {
-	if config, err := rest.InClusterConfig(); err == nil || err != rest.ErrNotInCluster {
-		return config, err
+func readClientConfigSettings(filePath string) (*clientcmd.ClientConfigLoadingRules, *clientcmd.ConfigOverrides, error) {
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	return clientcmd.BuildConfigFromFlags("", filepath.Join(homedir.HomeDir(), ".kube", "config"))
+	clusterRoles := ClusterRoles{
+		KubeConfig: ClusterRolesKubeConfig{
+			LoadingRules: clientcmd.NewDefaultClientConfigLoadingRules(),
+			Overrides:    &clientcmd.ConfigOverrides{},
+		},
+	}
+	if err := yaml.Unmarshal(data, &clusterRoles); err != nil {
+		return nil, nil, err
+	}
+
+	return clusterRoles.KubeConfig.LoadingRules, clusterRoles.KubeConfig.Overrides, nil
 }
 
-func buildIndex() (GroupIndex, error) {
-	config, err := buildConfig()
-	if err != nil {
-		return nil, err
-	}
+type Namespaced bool
+type ResourceIndex map[string]Namespaced
+type GroupIndex map[string]ResourceIndex
 
-	discoveryClient, err := discovery.NewDiscoveryClientForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
+func buildIndex(discoveryClient *discovery.DiscoveryClient) (GroupIndex, error) {
 	_, resourceLists, err := discoveryClient.ServerGroupsAndResources()
 	if err != nil {
 		return nil, err
@@ -111,7 +137,7 @@ func buildIndex() (GroupIndex, error) {
 		groupVersion := resourceList.GroupVersion
 
 		var groupName string
-		if separatorIndex := strings.Index(groupVersion, groupVersionSeparator); separatorIndex != -1 {
+		if separatorIndex := strings.Index(groupVersion, separatorGV); separatorIndex != -1 {
 			groupName = groupVersion[:separatorIndex]
 		}
 
