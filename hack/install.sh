@@ -8,8 +8,8 @@ RELEASE_URL=https://github.com/inloco/iac-kustomize-generator-plugins/releases/d
 
 for KIND in ClusterRoles Namespace Unnamespaced
 do
-  KIND_LOWERCASE=$(echo ${KIND} | tr '[:upper:]' '[:lower:]')
-  mkdir -p ${PLACEMENT}/${KIND_LOWERCASE}
-  wget -O ${PLACEMENT}/${KIND_LOWERCASE}/${KIND} ${RELEASE_URL}/${KIND_LOWERCASE}-${OS_NAME}-amd64
-  chmod +x ${PLACEMENT}/${KIND_LOWERCASE}/${KIND}
+	KIND_LOWERCASE=$(echo ${KIND} | tr '[:upper:]' '[:lower:]')
+	mkdir -p ${PLACEMENT}/${KIND_LOWERCASE}
+	wget -O ${PLACEMENT}/${KIND_LOWERCASE}/${KIND} ${RELEASE_URL}/${KIND_LOWERCASE}-${OS_NAME}-amd64
+	chmod +x ${PLACEMENT}/${KIND_LOWERCASE}/${KIND}
 done
