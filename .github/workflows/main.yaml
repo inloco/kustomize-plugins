@@ -43,7 +43,7 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: ${{ github.ref }}
-  publish_plugins:
+  publish-plugins:
     name: Publish Plugins
     needs: release
     runs-on: ubuntu-latest
@@ -72,9 +72,9 @@ jobs:
           asset_path: ./${{ matrix.plugin }}-${{ matrix.os.name }}/plugin
           asset_name: ${{ matrix.plugin }}-${{ matrix.os.kernel }}-amd64
           asset_content_type: application/octet-stream
-  publish_script:
+  publish-script:
     name: Publish Script
-    needs: publish_plugins
+    needs: publish-plugins
     runs-on: ubuntu-latest
     steps:
       - name: Check out code into directory
@@ -89,4 +89,4 @@ jobs:
           upload_url: ${{ needs.release.outputs.upload-url }}
           asset_path: ./hack/install.sh
           asset_name: install.sh
-          asset_content_type: text/plain
+          asset_content_type: text/x-shellscript
