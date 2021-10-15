@@ -4,7 +4,7 @@
 
 To install all plugins, download the binaries to the Kustomize plugin folder and make them executable.
 
-### Linux 64-bits and macOS 64-bits
+### Linux 64-bits and/or macOS 64-bits
 
 ```bash
 wget -qO- https://github.com/inloco/iac-kustomize-generator-plugins/releases/download/v0.0.6/install.sh | sh
