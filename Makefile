@@ -31,6 +31,17 @@ test: setup-environment
 		-v ./...
 .PHONY: test
 
+argoappproject/plugin: setup-environment
+	@printf '${BOLD}${RED}make: *** [argoappproject/plugin]${RESET}${EOL}'
+	cd ${MOD_PATH}                              && \
+	go build                                       \
+		-o 'argoappproject/plugin'                 \
+		-a                                         \
+		-installsuffix 'cgo'                       \
+		-gcflags 'all=-trimpath "${TMP_PATH}/src"' \
+		-v                                         \
+		./argoappproject
+
 clusterroles/plugin: setup-environment
 	@printf '${BOLD}${RED}make: *** [clusterroles/plugin]${RESET}${EOL}'
 	cd ${MOD_PATH}                              && \
@@ -64,8 +75,14 @@ unnamespaced/plugin: setup-environment
 		-v                                         \
 		./unnamespaced
 
-build: clusterroles/plugin namespace/plugin unnamespaced/plugin
+build: argoappproject/plugin clusterroles/plugin namespace/plugin unnamespaced/plugin
 .PHONY: build
+
+install-argoappproject: argoappproject/plugin
+	@printf '${BOLD}${RED}make: *** [install-argoappproject]${RESET}${EOL}'
+	mkdir -p ${PLACEMENT}/argoappproject
+	cp ./argoappproject/plugin ${PLACEMENT}/argoappproject/ArgoAppProject
+.PHONY: install-argoappproject
 
 install-clusterroles: clusterroles/plugin
 	@printf '${BOLD}${RED}make: *** [install-clusterroles]${RESET}${EOL}'
@@ -85,7 +102,7 @@ install-unnamespaced: unnamespaced/plugin
 	cp ./unnamespaced/plugin ${PLACEMENT}/unnamespaced/Unnamespaced
 .PHONY: install-unnamespaced
 
-install: install-clusterroles install-namespace install-unnamespaced
+install: install-argoappproject install-clusterroles install-namespace install-unnamespaced
 .PHONY: install
 
 continuous-integration: test build
