@@ -104,6 +104,3 @@ install-unnamespaced: unnamespaced/plugin
 
 install: install-argoappproject install-clusterroles install-namespace install-unnamespaced
 .PHONY: install
-
-continuous-integration: test build
-.PHONY: continuous-integration
