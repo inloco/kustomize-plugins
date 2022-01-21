@@ -31,16 +31,16 @@ test: setup-environment
 		-v ./...
 .PHONY: test
 
-argoappproject/plugin: setup-environment
-	@printf '${BOLD}${RED}make: *** [argoappproject/plugin]${RESET}${EOL}'
+argoproject/plugin: setup-environment
+	@printf '${BOLD}${RED}make: *** [argoproject/plugin]${RESET}${EOL}'
 	cd ${MOD_PATH}                              && \
 	go build                                       \
-		-o 'argoappproject/plugin'                 \
+		-o 'argoproject/plugin'                 \
 		-a                                         \
 		-installsuffix 'cgo'                       \
 		-gcflags 'all=-trimpath "${TMP_PATH}/src"' \
 		-v                                         \
-		./argoappproject
+		./argoproject
 
 clusterroles/plugin: setup-environment
 	@printf '${BOLD}${RED}make: *** [clusterroles/plugin]${RESET}${EOL}'
@@ -75,14 +75,14 @@ unnamespaced/plugin: setup-environment
 		-v                                         \
 		./unnamespaced
 
-build: argoappproject/plugin clusterroles/plugin namespace/plugin unnamespaced/plugin
+build: argoproject/plugin clusterroles/plugin namespace/plugin unnamespaced/plugin
 .PHONY: build
 
-install-argoappproject: argoappproject/plugin
-	@printf '${BOLD}${RED}make: *** [install-argoappproject]${RESET}${EOL}'
-	mkdir -p ${PLACEMENT}/argoappproject
-	cp ./argoappproject/plugin ${PLACEMENT}/argoappproject/ArgoAppProject
-.PHONY: install-argoappproject
+install-argoproject: argoproject/plugin
+	@printf '${BOLD}${RED}make: *** [install-argoproject]${RESET}${EOL}'
+	mkdir -p ${PLACEMENT}/argoproject
+	cp ./argoproject/plugin ${PLACEMENT}/argoproject/ArgoProject
+.PHONY: install-argoproject
 
 install-clusterroles: clusterroles/plugin
 	@printf '${BOLD}${RED}make: *** [install-clusterroles]${RESET}${EOL}'
@@ -102,5 +102,5 @@ install-unnamespaced: unnamespaced/plugin
 	cp ./unnamespaced/plugin ${PLACEMENT}/unnamespaced/Unnamespaced
 .PHONY: install-unnamespaced
 
-install: install-argoappproject install-clusterroles install-namespace install-unnamespaced
+install: install-argoproject install-clusterroles install-namespace install-unnamespaced
 .PHONY: install
