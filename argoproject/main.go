@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -13,8 +14,9 @@ import (
 )
 
 const (
-	separatorPanic = ": "
-	separatorYAML  = "---\n"
+	separatorPanic  = ": "
+	separatorYAML   = "---\n"
+	yamlStatusField = "status"
 )
 
 type accessLevel int
@@ -136,7 +138,7 @@ func makeAppProject(project *Project) ([]byte, error) {
 	readSyncProjectRole := makeProjectRole(readSync, project)
 	argoAppProject.Spec.Roles = append(argoAppProject.Spec.Roles, *readSyncProjectRole)
 
-	return yaml.Marshal(argoAppProject)
+	return marshalYAMLWithoutStatusField(argoAppProject)
 }
 
 func makeProjectRole(accessLevel accessLevel, project *Project) *argov1alpha1.ProjectRole {
@@ -164,5 +166,22 @@ func makeApplication(project *Project, app *argov1alpha1.Application) ([]byte, e
 	app.Spec.Project = project.Name
 	app.Spec.Destination = project.Spec.Destination
 
-	return yaml.Marshal(app)
+	return marshalYAMLWithoutStatusField(app)
+}
+
+func marshalYAMLWithoutStatusField(v interface{}) ([]byte, error) {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+
+	var vm map[string]interface{}
+	err = json.Unmarshal(b, &vm)
+	if err != nil {
+		return nil, err
+	}
+
+	delete(vm, yamlStatusField)
+
+	return yaml.Marshal(vm)
 }
