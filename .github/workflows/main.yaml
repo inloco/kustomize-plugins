@@ -9,7 +9,7 @@ jobs:
           - macos-latest
           - ubuntu-latest
         plugin:
-          - argoappproject
+          - argoproject
           - clusterroles
           - namespace
           - unnamespaced
@@ -62,7 +62,7 @@ jobs:
           - name: Linux
             kernel: linux
         plugin:
-          - argoappproject
+          - argoproject
           - clusterroles
           - namespace
           - unnamespaced
