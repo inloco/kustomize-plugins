@@ -1,6 +1,6 @@
-# Argo AppProject Kustomize Generator Plugin
+# ArgoProject Kustomize Generator Plugin
 
-It is a plugin for [Kustomize](https://github.com/kubernetes-sigs/kustomize) that allows you to generate an Argo's
+It is a plugin for [Kustomize](https://github.com/kubernetes-sigs/kustomize) that allows you to generate Argo's
 AppProject and Applications with its access control definitions.
 
 ## Using
