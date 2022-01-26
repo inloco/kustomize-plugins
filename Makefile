@@ -53,6 +53,17 @@ clusterroles/plugin: setup-environment
 		-v                                         \
 		./clusterroles
 
+kustomizebuild/plugin: setup-environment
+	@printf '${BOLD}${RED}make: *** [kustomizebuild/plugin]${RESET}${EOL}'
+	cd ${MOD_PATH}                              && \
+	go build                                       \
+		-o 'kustomizebuild/plugin'                      \
+		-a                                         \
+		-installsuffix 'cgo'                       \
+		-gcflags 'all=-trimpath "${TMP_PATH}/src"' \
+		-v                                         \
+		./kustomizebuild
+
 namespace/plugin: setup-environment
 	@printf '${BOLD}${RED}make: *** [namespace/plugin]${RESET}${EOL}'
 	cd ${MOD_PATH}                              && \
@@ -75,7 +86,7 @@ unnamespaced/plugin: setup-environment
 		-v                                         \
 		./unnamespaced
 
-build: argoproject/plugin clusterroles/plugin namespace/plugin unnamespaced/plugin
+build: argoproject/plugin clusterroles/plugin kustomizebuild/plugin namespace/plugin unnamespaced/plugin
 .PHONY: build
 
 install-argoproject: argoproject/plugin
@@ -90,6 +101,12 @@ install-clusterroles: clusterroles/plugin
 	cp ./clusterroles/plugin ${PLACEMENT}/clusterroles/ClusterRoles
 .PHONY: install-clusterroles
 
+install-kustomizebuild: kustomizebuild/plugin
+	@printf '${BOLD}${RED}make: *** [install-kustomizebuild]${RESET}${EOL}'
+	mkdir -p ${PLACEMENT}/kustomizebuild
+	cp ./kustomizebuild/plugin ${PLACEMENT}/kustomizebuild/KustomizeBuild
+.PHONY: install-kustomizebuild
+
 install-namespace: namespace/plugin
 	@printf '${BOLD}${RED}make: *** [install-namespace]${RESET}${EOL}'
 	mkdir -p ${PLACEMENT}/namespace
@@ -102,5 +119,5 @@ install-unnamespaced: unnamespaced/plugin
 	cp ./unnamespaced/plugin ${PLACEMENT}/unnamespaced/Unnamespaced
 .PHONY: install-unnamespaced
 
-install: install-argoproject install-clusterroles install-namespace install-unnamespaced
+install: install-argoproject install-clusterroles install-kustomizebuild install-namespace install-unnamespaced
 .PHONY: install

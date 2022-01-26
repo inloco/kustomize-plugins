@@ -11,6 +11,7 @@ jobs:
         plugin:
           - argoproject
           - clusterroles
+          - kustomizebuild
           - namespace
           - unnamespaced
     runs-on: ${{ matrix.platform }}
@@ -64,6 +65,7 @@ jobs:
         plugin:
           - argoproject
           - clusterroles
+          - kustomizebuild
           - namespace
           - unnamespaced
     steps:
