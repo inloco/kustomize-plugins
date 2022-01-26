@@ -4,9 +4,13 @@ go 1.16
 
 require (
 	github.com/argoproj/argo-cd/v2 v2.2.2
+	github.com/moby/buildkit v0.9.3
+	github.com/moby/moby v20.10.12+incompatible
 	k8s.io/api v0.22.2
 	k8s.io/apimachinery v0.22.2
 	k8s.io/client-go v0.22.2
+	sigs.k8s.io/kustomize/api v0.8.11
+	sigs.k8s.io/kustomize/kyaml v0.11.0
 	sigs.k8s.io/yaml v1.3.0
 )
 
