@@ -178,8 +178,8 @@ github.com/apex/log v1.3.0/go.mod h1:jd8Vpsr46WAe3EZSQ/IUMs2qQD/GOycT5rPWCO1yGcs
 github.com/apex/logs v0.0.4/go.mod h1:XzxuLZ5myVHDy9SAmYpamKKRNApGj54PfYLcFrXqDwo=
 github.com/aphistic/golf v0.0.0-20180712155816-02c07f170c5a/go.mod h1:3NqKYiepwy8kCu4PNA+aP7WUV72eXWJeP9/r3/K9aLE=
 github.com/aphistic/sweet v0.2.0/go.mod h1:fWDlIh/isSE9n6EPsRmC0det+whmX6dJid3stzu0Xys=
-github.com/argoproj/argo-cd/v2 v2.2.2 h1:sKfiJuGiG85dBRYZz20n+y3tqs+F7yuLAKkxTH0Y260=
-github.com/argoproj/argo-cd/v2 v2.2.2/go.mod h1:J51If+krhtBEbNP/Y/l9sh9HctPHiiGueqPAkfFXXBo=
+github.com/argoproj/argo-cd/v2 v2.2.4 h1:PoxrWuwGV8UhDkvOE2iYDRa799jnT68tU6XvDZzLzL0=
+github.com/argoproj/argo-cd/v2 v2.2.4/go.mod h1:J51If+krhtBEbNP/Y/l9sh9HctPHiiGueqPAkfFXXBo=
 github.com/argoproj/gitops-engine v0.5.2 h1:UQ2ajVyUPCSgFyqidzlTXddh/Xf6cE3I0s9uu92BoJg=
 github.com/argoproj/gitops-engine v0.5.2/go.mod h1:K2RYpGXh11VdFwDksS23SyFTOJaPcsF+MVJ/FHlqEOE=
 github.com/argoproj/pkg v0.11.1-0.20211203175135-36c59d8fafe0 h1:Cfp7rO/HpVxnwlRqJe0jHiBbZ77ZgXhB6HWlYD02Xdc=
