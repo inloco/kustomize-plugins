@@ -163,7 +163,10 @@ func makeApplication(project *Project, app *argov1alpha1.Application) ([]byte, e
 		Kind:       application.ApplicationKind,
 	}
 
-	app.Spec.Project = project.Name
+	if app.Spec.Project == "" {
+		app.Spec.Project = project.Name
+	}
+
 	app.Spec.Destination = project.Spec.Destination
 
 	return marshalYAMLWithoutStatusField(app)
