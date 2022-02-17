@@ -84,7 +84,12 @@ func main() {
 		log.Panic(filePath, separatorPanic, err)
 	}
 
-	b, err := makeAppProject(&project)
+	argoAppProject, err := makeAppProject(&project)
+	if err != nil {
+		log.Panic(filePath, separatorPanic, err)
+	}
+
+	b, err := marshalAppProject(argoAppProject)
 	if err != nil {
 		log.Panic(filePath, separatorPanic, err)
 	}
@@ -98,7 +103,7 @@ func main() {
 			log.Panic(filePath, separatorPanic, err)
 		}
 
-		b, err = makeApplication(&project, &app)
+		b, err = makeApplication(argoAppProject, &app)
 		if err != nil {
 			log.Panic(filePath, separatorPanic, err)
 		}
@@ -109,7 +114,7 @@ func main() {
 	}
 }
 
-func makeAppProject(project *Project) ([]byte, error) {
+func makeAppProject(project *Project) (*argov1alpha1.AppProject, error) {
 	argoAppProject := project.Spec.AppProject
 
 	argoAppProject.TypeMeta = metav1.TypeMeta{
@@ -117,7 +122,9 @@ func makeAppProject(project *Project) ([]byte, error) {
 		Kind:       application.AppProjectKind,
 	}
 
-	argoAppProject.Name = project.Name
+	if argoAppProject.Name == "" {
+		argoAppProject.Name = project.Name
+	}
 
 	argoAppProject.Spec.NamespaceResourceWhitelist = []metav1.GroupKind{
 		metav1.GroupKind{
@@ -132,16 +139,20 @@ func makeAppProject(project *Project) ([]byte, error) {
 
 	argoAppProject.Spec.Destinations = append(argoAppProject.Spec.Destinations, project.Spec.Destination)
 
-	readOnlyProjectRole := makeProjectRole(readOnly, project)
+	readOnlyProjectRole := makeProjectRole(readOnly, project, &argoAppProject)
 	argoAppProject.Spec.Roles = append(argoAppProject.Spec.Roles, *readOnlyProjectRole)
 
-	readSyncProjectRole := makeProjectRole(readSync, project)
+	readSyncProjectRole := makeProjectRole(readSync, project, &argoAppProject)
 	argoAppProject.Spec.Roles = append(argoAppProject.Spec.Roles, *readSyncProjectRole)
 
+	return &argoAppProject, nil
+}
+
+func marshalAppProject(argoAppProject *argov1alpha1.AppProject) ([]byte, error) {
 	return marshalYAMLWithoutStatusField(argoAppProject)
 }
 
-func makeProjectRole(accessLevel accessLevel, project *Project) *argov1alpha1.ProjectRole {
+func makeProjectRole(accessLevel accessLevel, project *Project, appProject *argov1alpha1.AppProject) *argov1alpha1.ProjectRole {
 	var groups []string
 	switch accessLevel {
 	case readOnly:
@@ -152,22 +163,23 @@ func makeProjectRole(accessLevel accessLevel, project *Project) *argov1alpha1.Pr
 
 	return &argov1alpha1.ProjectRole{
 		Name:     accessLevel.longName(),
-		Policies: accessLevel.policies(project.Name),
+		Policies: accessLevel.policies(appProject.Name),
 		Groups:   groups,
 	}
 }
 
-func makeApplication(project *Project, app *argov1alpha1.Application) ([]byte, error) {
+func makeApplication(argoAppProject *argov1alpha1.AppProject, app *argov1alpha1.Application) ([]byte, error) {
 	app.TypeMeta = metav1.TypeMeta{
 		APIVersion: argov1alpha1.SchemeGroupVersion.String(),
 		Kind:       application.ApplicationKind,
 	}
 
-	if app.Spec.Project == "" {
-		app.Spec.Project = project.Name
+	if app.Name == "" {
+		app.Name = argoAppProject.Name
 	}
 
-	app.Spec.Destination = project.Spec.Destination
+	app.Spec.Project = argoAppProject.Name
+	app.Spec.Destination = argoAppProject.Spec.Destinations[0]
 
 	return marshalYAMLWithoutStatusField(app)
 }
