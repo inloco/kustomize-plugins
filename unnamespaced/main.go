@@ -45,12 +45,13 @@ func (a accessLevel) shortName() string {
 	}
 }
 
-type Namespace struct {
-	metav1.TypeMeta `json:",inline"`
-	AccessControl   NamespaceAccessControl `json:"accessControl,omitempty"`
+type Unnamespaced struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	AccessControl     UnnamespacedAccessControl `json:"accessControl,omitempty"`
 }
 
-type NamespaceAccessControl struct {
+type UnnamespacedAccessControl struct {
 	ReadOnly  []string `json:"readOnly,omitempty"`
 	ReadWrite []string `json:"readWrite,omitempty"`
 }
@@ -63,7 +64,7 @@ func main() {
 		log.Panic(filePath, ": ", err)
 	}
 
-	var namespace Namespace
+	var namespace Unnamespaced
 	if err := yaml.Unmarshal(data, &namespace); err != nil {
 		log.Panic(filePath, ": ", err)
 	}
@@ -93,23 +94,24 @@ func main() {
 	}
 }
 
-func makeClusterRoleBinding(accessLevel accessLevel, namespace *Namespace) ([]byte, error) {
+func makeClusterRoleBinding(accessLevel accessLevel, unnamespaced *Unnamespaced) ([]byte, error) {
 	var names []string
 	switch accessLevel {
 	case readOnly:
-		names = namespace.AccessControl.ReadOnly
+		names = unnamespaced.AccessControl.ReadOnly
 	case readWrite:
-		names = namespace.AccessControl.ReadWrite
+		names = unnamespaced.AccessControl.ReadWrite
 	}
+
+	objectMeta := unnamespaced.ObjectMeta
+	objectMeta.Name = accessLevel.longName()
 
 	return yaml.Marshal(rbacv1.ClusterRoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: rbacv1.SchemeGroupVersion.String(),
 			Kind:       reflect.TypeOf(rbacv1.ClusterRoleBinding{}).Name(),
 		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: accessLevel.longName(),
-		},
+		ObjectMeta: objectMeta,
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: rbacv1.GroupName,
 			Kind:     reflect.TypeOf(rbacv1.ClusterRole{}).Name(),
