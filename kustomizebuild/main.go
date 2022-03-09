@@ -46,8 +46,8 @@ type Spec struct {
 }
 
 type Directory struct {
-	Base string   `json:"base,omitempty"`
-	Glob []string `json:"glob,omitempty"`
+	Base  string   `json:"base,omitempty"`
+	Globs []string `json:"globs,omitempty"`
 }
 
 func main() {
@@ -117,7 +117,7 @@ func makePatternMatcher(base directoryBase, filePath string) (*fileutils.Pattern
 			continue
 		}
 
-		for _, g := range d.Glob {
+		for _, g := range d.Globs {
 			sb.WriteString(g)
 			sb.WriteString("\n")
 		}
