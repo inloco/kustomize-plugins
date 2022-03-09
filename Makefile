@@ -31,16 +31,16 @@ test: setup-environment
 		-v ./...
 .PHONY: test
 
-argoproject/plugin: setup-environment
-	@printf '${BOLD}${RED}make: *** [argoproject/plugin]${RESET}${EOL}'
+argocdproject/plugin: setup-environment
+	@printf '${BOLD}${RED}make: *** [argocdproject/plugin]${RESET}${EOL}'
 	cd ${MOD_PATH}                              && \
 	go build                                       \
-		-o 'argoproject/plugin'                 \
+		-o 'argocdproject/plugin'                 \
 		-a                                         \
 		-installsuffix 'cgo'                       \
 		-gcflags 'all=-trimpath "${TMP_PATH}/src"' \
 		-v                                         \
-		./argoproject
+		./argocdproject
 
 clusterroles/plugin: setup-environment
 	@printf '${BOLD}${RED}make: *** [clusterroles/plugin]${RESET}${EOL}'
@@ -86,14 +86,14 @@ unnamespaced/plugin: setup-environment
 		-v                                         \
 		./unnamespaced
 
-build: argoproject/plugin clusterroles/plugin kustomizebuild/plugin namespace/plugin unnamespaced/plugin
+build: argocdproject/plugin clusterroles/plugin kustomizebuild/plugin namespace/plugin unnamespaced/plugin
 .PHONY: build
 
-install-argoproject: argoproject/plugin
-	@printf '${BOLD}${RED}make: *** [install-argoproject]${RESET}${EOL}'
-	mkdir -p ${PLACEMENT}/argoproject
-	cp ./argoproject/plugin ${PLACEMENT}/argoproject/ArgoProject
-.PHONY: install-argoproject
+install-argocdproject: argocdproject/plugin
+	@printf '${BOLD}${RED}make: *** [install-argocdproject]${RESET}${EOL}'
+	mkdir -p ${PLACEMENT}/argocdproject
+	cp ./argocdproject/plugin ${PLACEMENT}/argocdproject/ArgoCDProject
+.PHONY: install-argocdproject
 
 install-clusterroles: clusterroles/plugin
 	@printf '${BOLD}${RED}make: *** [install-clusterroles]${RESET}${EOL}'
@@ -119,5 +119,5 @@ install-unnamespaced: unnamespaced/plugin
 	cp ./unnamespaced/plugin ${PLACEMENT}/unnamespaced/Unnamespaced
 .PHONY: install-unnamespaced
 
-install: install-argoproject install-clusterroles install-kustomizebuild install-namespace install-unnamespaced
+install: install-argocdproject install-clusterroles install-kustomizebuild install-namespace install-unnamespaced
 .PHONY: install

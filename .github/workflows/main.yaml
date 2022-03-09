@@ -9,7 +9,7 @@ jobs:
           - macos-latest
           - ubuntu-latest
         plugin:
-          - argoproject
+          - argocdproject
           - clusterroles
           - kustomizebuild
           - namespace
@@ -63,7 +63,7 @@ jobs:
           - name: Linux
             kernel: linux
         plugin:
-          - argoproject
+          - argocdproject
           - clusterroles
           - kustomizebuild
           - namespace
