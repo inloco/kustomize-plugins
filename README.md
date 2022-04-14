@@ -8,7 +8,7 @@ To install all plugins, download the binaries to the Kustomize plugin folder and
 
 ```bash
 VERSION=$(wget -qO- https://api.github.com/repos/inloco/iac-kustomize-plugins/releases/latest | jq -r '.tag_name')
-wget -qO- https://github.com/inloco/iac-kustomize-plugins/releases/download/${VERSION}/install.sh | sh
+wget -qO- "https://github.com/inloco/iac-kustomize-plugins/releases/download/${VERSION}/install.sh" | sh
 ```
 
 ### Manual Build and Install for Other Systems and/or Architectures
