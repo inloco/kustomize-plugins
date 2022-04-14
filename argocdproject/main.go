@@ -45,6 +45,7 @@ func (a accessLevel) policies(appProjectName string) []string {
 		}
 	case readSync:
 		return []string{
+			fmt.Sprintf("p, proj:%s:read-sync, applications, action/apps/Deployment/restart, %s/*, allow", appProjectName, appProjectName),
 			fmt.Sprintf("p, proj:%s:read-sync, applications, sync, %s/*, allow", appProjectName, appProjectName),
 			fmt.Sprintf("g, proj:%s:read-sync, proj:%s:read-only", appProjectName, appProjectName),
 		}
@@ -61,6 +62,7 @@ type Project struct {
 
 type ProjectSpec struct {
 	AccessControl AppProjectAccessControl             `json:"accessControl,omitempty"`
+	Environment   string                              `json:"environment,omitempty"`
 	Destination   argov1alpha1.ApplicationDestination `json:"destination,omitempty"`
 	AppProject    argov1alpha1.AppProject             `json:"appProjectTemplate,omitempty"`
 	Applications  []argov1alpha1.Application          `json:"applicationTemplates,omitempty"`
@@ -103,7 +105,7 @@ func main() {
 			log.Panic(filePath, separatorPanic, err)
 		}
 
-		b, err = makeApplication(argoAppProject, &app)
+		b, err = makeApplication(argoAppProject, &app, project.Spec.Environment)
 		if err != nil {
 			log.Panic(filePath, separatorPanic, err)
 		}
@@ -168,7 +170,7 @@ func makeProjectRole(accessLevel accessLevel, project *Project, appProject *argo
 	}
 }
 
-func makeApplication(argoAppProject *argov1alpha1.AppProject, app *argov1alpha1.Application) ([]byte, error) {
+func makeApplication(argoAppProject *argov1alpha1.AppProject, app *argov1alpha1.Application, environment string) ([]byte, error) {
 	app.TypeMeta = metav1.TypeMeta{
 		APIVersion: argov1alpha1.SchemeGroupVersion.String(),
 		Kind:       application.ApplicationKind,
@@ -181,7 +183,18 @@ func makeApplication(argoAppProject *argov1alpha1.AppProject, app *argov1alpha1.
 	app.Spec.Project = argoAppProject.Name
 	app.Spec.Destination = argoAppProject.Spec.Destinations[0]
 
+	makeApplicationEnvironment(app, environment)
+
 	return marshalYAMLWithoutStatusField(app)
+}
+
+func makeApplicationEnvironment(app *argov1alpha1.Application, environment string) {
+	if environment == "" {
+		return
+	}
+
+	app.Spec.Source.TargetRevision = fmt.Sprintf("env-%s", environment)
+	app.Spec.Source.Path = fmt.Sprintf("./k8s/overlays/%s", environment)
 }
 
 func marshalYAMLWithoutStatusField(v interface{}) ([]byte, error) {
