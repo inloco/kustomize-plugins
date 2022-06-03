@@ -46,6 +46,11 @@ func (a accessLevel) policies(appProjectName string) []string {
 	case readSync:
 		return []string{
 			fmt.Sprintf("p, proj:%s:read-sync, applications, action/apps/Deployment/restart, %s/*, allow", appProjectName, appProjectName),
+			fmt.Sprintf("p, proj:%s:read-sync, applications, action/argoproj.io/Rollout/abort, %s/*, allow", appProjectName, appProjectName),
+			fmt.Sprintf("p, proj:%s:read-sync, applications, action/argoproj.io/Rollout/promote-full, %s/*, allow", appProjectName, appProjectName),
+			fmt.Sprintf("p, proj:%s:read-sync, applications, action/argoproj.io/Rollout/restart, %s/*, allow", appProjectName, appProjectName),
+			fmt.Sprintf("p, proj:%s:read-sync, applications, action/argoproj.io/Rollout/resume, %s/*, allow", appProjectName, appProjectName),
+			fmt.Sprintf("p, proj:%s:read-sync, applications, action/argoproj.io/Rollout/retry, %s/*, allow", appProjectName, appProjectName),
 			fmt.Sprintf("p, proj:%s:read-sync, applications, sync, %s/*, allow", appProjectName, appProjectName),
 			fmt.Sprintf("g, proj:%s:read-sync, proj:%s:read-only", appProjectName, appProjectName),
 		}
