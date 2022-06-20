@@ -41,4 +41,5 @@ replace (
 	k8s.io/mount-utils => k8s.io/mount-utils v0.23.3
 	k8s.io/pod-security-admission => k8s.io/pod-security-admission v0.23.3
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.23.3
+	sigs.k8s.io/json => sigs.k8s.io/json v0.0.0-20220525155127-227cbc7cc124
 )
