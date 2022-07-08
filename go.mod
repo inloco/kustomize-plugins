@@ -3,7 +3,7 @@ module github.com/inloco/iac-kustomize-plugins
 go 1.17
 
 require (
-	github.com/argoproj/argo-cd/v2 v2.4.0
+	github.com/argoproj/argo-cd/v2 v2.4.1
 	github.com/moby/buildkit v0.9.3
 	github.com/moby/moby v20.10.12+incompatible
 	github.com/onsi/ginkgo/v2 v2.1.4

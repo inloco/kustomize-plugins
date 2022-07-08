@@ -212,8 +212,8 @@ github.com/apex/logs v0.0.4/go.mod h1:XzxuLZ5myVHDy9SAmYpamKKRNApGj54PfYLcFrXqDw
 github.com/aphistic/golf v0.0.0-20180712155816-02c07f170c5a/go.mod h1:3NqKYiepwy8kCu4PNA+aP7WUV72eXWJeP9/r3/K9aLE=
 github.com/aphistic/sweet v0.2.0/go.mod h1:fWDlIh/isSE9n6EPsRmC0det+whmX6dJid3stzu0Xys=
 github.com/appscode/go v0.0.0-20190808133642-1d4ef1f1c1e0/go.mod h1:iy07dV61Z7QQdCKJCIvUoDL21u6AIceRhZzyleh2ymc=
-github.com/argoproj/argo-cd/v2 v2.4.0 h1:p0dlrY0yIj7K7K/QtLPvJuNsDYIiXyWxUbou0E9P16k=
-github.com/argoproj/argo-cd/v2 v2.4.0/go.mod h1:v/qJlqOYdszqe7WtNSKOppNy3AhRKa9cHSGFw6Pg7lg=
+github.com/argoproj/argo-cd/v2 v2.4.1 h1:wR+t9wG2BMQbU9e6jSEKsTBYjyDvKB/XdFsXNJhbLuQ=
+github.com/argoproj/argo-cd/v2 v2.4.1/go.mod h1:v/qJlqOYdszqe7WtNSKOppNy3AhRKa9cHSGFw6Pg7lg=
 github.com/argoproj/gitops-engine v0.7.0 h1:X6W8VP9bWTe74wWxAV3i8KZ0yBmre5DU8g+GWH09FCo=
 github.com/argoproj/gitops-engine v0.7.0/go.mod h1:pRgVpLW7pZqf7n3COJ7UcDepk4cI61LAcJd64Q3Jq/c=
 github.com/argoproj/notifications-engine v0.3.1-0.20220430155844-567361917320/go.mod h1:R3zlopt+/juYlebQc9Jarn9vBQ2xZruWOWjUNkfGY9M=
