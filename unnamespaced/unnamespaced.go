@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -16,32 +17,43 @@ const (
 	yamlSeparator = "---\n"
 )
 
-type accessLevel int
+type AccessLevel int
 
 const (
-	readOnly accessLevel = iota
-	readWrite
+	ReadOnly AccessLevel = iota
+	ReadWrite
 )
 
-func (a accessLevel) longName() string {
+func (a AccessLevel) LongName() string {
 	switch a {
-	case readOnly:
+	case ReadOnly:
 		return "unnamespaced-ro"
-	case readWrite:
+	case ReadWrite:
 		return "unnamespaced-rw"
 	default:
 		panic(fmt.Sprintf("unknown access level %d", a))
 	}
 }
 
-func (a accessLevel) shortName() string {
+func (a AccessLevel) ShortName() string {
 	switch a {
-	case readOnly:
+	case ReadOnly:
 		return "ro"
-	case readWrite:
+	case ReadWrite:
 		return "rw"
 	default:
 		panic(fmt.Sprintf("unknown access level %d", a))
+	}
+}
+
+func AccessLevelFromLongName(s string) AccessLevel {
+	switch s {
+	case ReadOnly.LongName():
+		return ReadOnly
+	case ReadWrite.LongName():
+		return ReadWrite
+	default:
+		panic(fmt.Sprintf("unknown access level %s", s))
 	}
 }
 
@@ -52,8 +64,8 @@ type Unnamespaced struct {
 }
 
 type UnnamespacedAccessControl struct {
-	ReadOnly  []string `json:"readOnly,omitempty"`
-	ReadWrite []string `json:"readWrite,omitempty"`
+	ReadOnly  []string `json:"ReadOnly,omitempty"`
+	ReadWrite []string `json:"ReadWrite,omitempty"`
 }
 
 func main() {
@@ -64,49 +76,57 @@ func main() {
 		log.Panic(filePath, ": ", err)
 	}
 
-	var namespace Unnamespaced
-	if err := yaml.Unmarshal(data, &namespace); err != nil {
+	if err := GenerateManifests(data, os.Stdout); err != nil {
 		log.Panic(filePath, ": ", err)
-	}
-
-	var yamls [][]byte
-
-	ro, err := makeClusterRoleBinding(readOnly, &namespace)
-	if err != nil {
-		return
-	}
-	yamls = append(yamls, ro)
-
-	rw, err := makeClusterRoleBinding(readWrite, &namespace)
-	if err != nil {
-		return
-	}
-	yamls = append(yamls, rw)
-
-	for _, y := range yamls {
-		if _, err := os.Stdout.Write(y); err != nil {
-			log.Panic(filePath, ": ", err)
-		}
-
-		if _, err := os.Stdout.Write([]byte(yamlSeparator)); err != nil {
-			log.Panic(filePath, ": ", err)
-		}
 	}
 }
 
-func makeClusterRoleBinding(accessLevel accessLevel, unnamespaced *Unnamespaced) ([]byte, error) {
+func GenerateManifests(data []byte, out io.Writer) error {
+	var namespace Unnamespaced
+	if err := yaml.Unmarshal(data, &namespace); err != nil {
+		return err
+	}
+
+	var manifests [][]byte
+
+	readOnlyClusterRoleBinding, err := makeClusterRoleBinding(ReadOnly, &namespace)
+	if err != nil {
+		return err
+	}
+	manifests = append(manifests, readOnlyClusterRoleBinding)
+
+	readWriteClusterRoleBinding, err := makeClusterRoleBinding(ReadWrite, &namespace)
+	if err != nil {
+		return err
+	}
+	manifests = append(manifests, readWriteClusterRoleBinding)
+
+	for _, y := range manifests {
+		if _, err := out.Write([]byte(yamlSeparator)); err != nil {
+			return err
+		}
+
+		if _, err := out.Write(y); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func makeClusterRoleBinding(accessLevel AccessLevel, unnamespaced *Unnamespaced) ([]byte, error) {
 	var names []string
 	switch accessLevel {
-	case readOnly:
+	case ReadOnly:
 		names = unnamespaced.AccessControl.ReadOnly
-	case readWrite:
+	case ReadWrite:
 		names = unnamespaced.AccessControl.ReadWrite
 	}
 
 	objectMeta := unnamespaced.ObjectMeta
-	objectMeta.Name = accessLevel.longName()
+	objectMeta.Name = accessLevel.LongName()
 
-	return yaml.Marshal(rbacv1.ClusterRoleBinding{
+	clusterRoleBinding := rbacv1.ClusterRoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: rbacv1.SchemeGroupVersion.String(),
 			Kind:       reflect.TypeOf(rbacv1.ClusterRoleBinding{}).Name(),
@@ -115,14 +135,17 @@ func makeClusterRoleBinding(accessLevel accessLevel, unnamespaced *Unnamespaced)
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: rbacv1.GroupName,
 			Kind:     reflect.TypeOf(rbacv1.ClusterRole{}).Name(),
-			Name:     accessLevel.longName(),
+			Name:     accessLevel.LongName(),
 		},
 		Subjects: makeSubjects(names),
-	})
+	}
+
+	return yaml.Marshal(clusterRoleBinding)
 }
 
 func makeSubjects(names []string) []rbacv1.Subject {
 	var subjects []rbacv1.Subject
+
 	for _, name := range names {
 		subjects = append(subjects, rbacv1.Subject{
 			APIGroup: rbacv1.GroupName,

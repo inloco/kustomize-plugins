@@ -97,27 +97,26 @@ func GenerateManifests(data []byte, out io.Writer) error {
 		return err
 	}
 
-	appProject := extractAppProject(&argocdProject)
+	var manifests [][]byte
 
-	b, err := marshalYAMLWithoutStatusField(appProject)
+	b, err := makeAppProject(&argocdProject)
 	if err != nil {
 		return err
 	}
-	if _, err := out.Write(b); err != nil {
+	manifests = append(manifests, b)
+
+	bs, err := makeApplications(argocdProject)
+	if err != nil {
 		return err
 	}
+	manifests = append(manifests, bs...)
 
-	apps := extractApplications(argocdProject, appProject)
-	for _, app := range apps {
+	for _, manifest := range manifests {
 		if _, err := out.Write([]byte(separatorYAML)); err != nil {
 			return err
 		}
 
-		b, err := marshalYAMLWithoutStatusField(app)
-		if err != nil {
-			return err
-		}
-		if _, err := out.Write(b); err != nil {
+		if _, err := out.Write(manifest); err != nil {
 			return err
 		}
 	}
@@ -125,7 +124,7 @@ func GenerateManifests(data []byte, out io.Writer) error {
 	return nil
 }
 
-func extractAppProject(argocdProject *ArgoCDProject) *argov1alpha1.AppProject {
+func makeAppProject(argocdProject *ArgoCDProject) ([]byte, error) {
 	appProject := &argocdProject.Spec.AppProject
 
 	appProject.TypeMeta = metav1.TypeMeta{
@@ -133,9 +132,7 @@ func extractAppProject(argocdProject *ArgoCDProject) *argov1alpha1.AppProject {
 		Kind:       application.AppProjectKind,
 	}
 
-	if appProject.Name == "" {
-		appProject.Name = argocdProject.Name
-	}
+	appProject.Name = argocdProject.Name
 
 	appProject.Spec.NamespaceResourceWhitelist = []metav1.GroupKind{
 		metav1.GroupKind{
@@ -144,6 +141,7 @@ func extractAppProject(argocdProject *ArgoCDProject) *argov1alpha1.AppProject {
 		},
 	}
 
+	// TODO only allow SourceRepos required by applications to avoid unnecessary permissions
 	appProject.Spec.SourceRepos = []string{
 		"*",
 	}
@@ -167,7 +165,7 @@ func extractAppProject(argocdProject *ArgoCDProject) *argov1alpha1.AppProject {
 	readSyncProjectRole := makeProjectRole(ReadSync, argocdProject, appProject)
 	appProject.Spec.Roles = append(appProject.Spec.Roles, *readSyncProjectRole)
 
-	return appProject
+	return marshalYAMLWithoutStatusField(appProject)
 }
 
 func makeProjectRole(accessLevel accessLevel, argocdProject *ArgoCDProject, appProject *argov1alpha1.AppProject) *argov1alpha1.ProjectRole {
@@ -186,8 +184,9 @@ func makeProjectRole(accessLevel accessLevel, argocdProject *ArgoCDProject, appP
 	}
 }
 
-func extractApplications(argocdProject ArgoCDProject, appProject *argov1alpha1.AppProject) []argov1alpha1.Application {
+func makeApplications(argocdProject ArgoCDProject) ([][]byte, error) {
 	apps := argocdProject.Spec.ApplicationTemplates
+	manifests := make([][]byte, 0, len(apps))
 
 	for i := range apps {
 		app := &apps[i]
@@ -197,15 +196,21 @@ func extractApplications(argocdProject ArgoCDProject, appProject *argov1alpha1.A
 			Kind:       application.ApplicationKind,
 		}
 
-		app.Spec.Project = appProject.Name
+		app.Spec.Project = argocdProject.Name
 
 		if argocdProject.Spec.Environment != "" {
 			app.Spec.Source.Path = fmt.Sprintf("./k8s/overlays/%s", argocdProject.Spec.Environment)
 			app.Spec.Source.TargetRevision = fmt.Sprintf("env-%s", argocdProject.Spec.Environment)
 		}
+
+		b, err := marshalYAMLWithoutStatusField(app)
+		if err != nil {
+			return nil, err
+		}
+		manifests = append(manifests, b)
 	}
 
-	return apps
+	return manifests, nil
 }
 
 func marshalYAMLWithoutStatusField(v interface{}) ([]byte, error) {

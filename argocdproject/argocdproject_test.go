@@ -17,177 +17,170 @@ import (
 )
 
 var (
-	separatorYAML          = regexp.MustCompile("\n---\n")
-	singleAppArgoCDProject = main.ArgoCDProject{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: schema.GroupVersion{
-				Group:   "incognia.com",
-				Version: "v1alpha1",
-			}.String(),
-			Kind: "ArgoCDProject",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "github-checker",
-		},
-		Spec: main.ProjectSpec{
-			AccessControl: main.AppProjectAccessControl{
-				ReadOnly: []string{
-					"sre:eng-2",
-				},
-				ReadSync: []string{
-					"sre:eng-0",
-					"sre:eng-1",
-				},
-			},
-			Environment: "production",
-			ApplicationTemplates: []argov1alpha1.Application{
-				argov1alpha1.Application{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "github-checker-app",
-					},
-					Spec: argov1alpha1.ApplicationSpec{
-						Source: argov1alpha1.ApplicationSource{
-							RepoURL: "https://github.com/inloco/github-checker.git",
-						},
-						Destination: argov1alpha1.ApplicationDestination{
-							Name:      "arn:aws:eks:us:123456789876:cluster/Global-SRE",
-							Namespace: "github-checker",
-						},
-					},
-				},
-			},
-		},
-	}
-	multiAppArgoCDProject = main.ArgoCDProject{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: schema.GroupVersion{
-				Group:   "incognia.com",
-				Version: "v1alpha1",
-			}.String(),
-			Kind: "ArgoCDProject",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "github-checker",
-		},
-		Spec: main.ProjectSpec{
-			AccessControl: main.AppProjectAccessControl{
-				ReadSync: []string{
-					"sre:eng-0",
-				},
-			},
-			AppProject: argov1alpha1.AppProject{
-				Spec: argov1alpha1.AppProjectSpec{
-					Destinations: []argov1alpha1.ApplicationDestination{
-						argov1alpha1.ApplicationDestination{
-							Name:      "arn:aws:eks:us:123456789876:cluster/Global-SRE",
-							Namespace: "github-checker",
-						},
-						argov1alpha1.ApplicationDestination{
-							Name:      "arn:aws:eks:us:123456789876:cluster/Global-Product",
-							Namespace: "another-checker",
-						},
-						argov1alpha1.ApplicationDestination{
-							Name:      "arn:aws:eks:us:123456789876:cluster/Global-FortKnox",
-							Namespace: "foreground-checker",
-						},
-					},
-					ClusterResourceWhitelist: []metav1.GroupKind{
-						metav1.GroupKind{
-							Group: "*",
-							Kind:  "*",
-						},
-					},
-				},
-			},
-			ApplicationTemplates: []argov1alpha1.Application{
-				argov1alpha1.Application{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "github-checker-app",
-					},
-					Spec: argov1alpha1.ApplicationSpec{
-						Source: argov1alpha1.ApplicationSource{
-							RepoURL:        "https://github.com/inloco/github-checker.git",
-							Path:           "namespaces/example/environment-overlays/env/cluster-overlays/cluster",
-							TargetRevision: "HEAD",
-						},
-						Destination: argov1alpha1.ApplicationDestination{
-							Name:      "arn:aws:eks:us:123456789876:cluster/Global-SRE",
-							Namespace: "github-checker",
-						},
-					},
-				},
-				argov1alpha1.Application{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "another-checker-app",
-					},
-					Spec: argov1alpha1.ApplicationSpec{
-						Source: argov1alpha1.ApplicationSource{
-							RepoURL:        "https://github.com/inloco/another-checker.git",
-							Path:           "namespaces/example/environment-overlays/env/cluster-overlays/cluster",
-							TargetRevision: "HEAD",
-						},
-						Destination: argov1alpha1.ApplicationDestination{
-							Name:      "arn:aws:eks:us:123456789876:cluster/Global-Product",
-							Namespace: "another-checker",
-						},
-					},
-				},
-			},
-		},
-	}
+	separatorYaml = regexp.MustCompile("\n---\n")
 )
 
 var _ = ginkgo.Describe("ArgoCDProject", func() {
-	var singleAppArgoCDProjectYAML []byte
-	if data, err := yaml.Marshal(singleAppArgoCDProject); g.Expect(err).To(g.BeNil()) {
-		singleAppArgoCDProjectYAML = data
-	}
-
-	var multiAppArgoCDProjectYAML []byte
-	if data, err := yaml.Marshal(multiAppArgoCDProject); g.Expect(err).To(g.BeNil()) {
-		multiAppArgoCDProjectYAML = data
-	}
-
 	ginkgo.DescribeTable("entries", ArgoCDProject,
-		ginkgo.Entry("with single application", singleAppArgoCDProject, singleAppArgoCDProjectYAML),
-		ginkgo.Entry("with multiple applications", multiAppArgoCDProject, multiAppArgoCDProjectYAML),
+		ginkgo.Entry("with single application", main.ArgoCDProject{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: schema.GroupVersion{
+					Group:   "incognia.com",
+					Version: "v1alpha1",
+				}.String(),
+				Kind: "ArgoCDProject",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "github-checker",
+			},
+			Spec: main.ProjectSpec{
+				AccessControl: main.AppProjectAccessControl{
+					ReadOnly: []string{
+						"sre:eng-2",
+					},
+					ReadSync: []string{
+						"sre:eng-0",
+						"sre:eng-1",
+					},
+				},
+				Environment: "production",
+				ApplicationTemplates: []argov1alpha1.Application{
+					argov1alpha1.Application{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "github-checker-app",
+						},
+						Spec: argov1alpha1.ApplicationSpec{
+							Source: argov1alpha1.ApplicationSource{
+								RepoURL: "https://github.com/inloco/github-checker.git",
+							},
+							Destination: argov1alpha1.ApplicationDestination{
+								Name:      "arn:aws:eks:us:123456789876:cluster/Global-SRE",
+								Namespace: "github-checker",
+							},
+						},
+					},
+				},
+			},
+		}),
+		ginkgo.Entry("with multiple applications", main.ArgoCDProject{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: schema.GroupVersion{
+					Group:   "incognia.com",
+					Version: "v1alpha1",
+				}.String(),
+				Kind: "ArgoCDProject",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "github-checker",
+			},
+			Spec: main.ProjectSpec{
+				AccessControl: main.AppProjectAccessControl{
+					ReadSync: []string{
+						"sre:eng-0",
+					},
+				},
+				AppProject: argov1alpha1.AppProject{
+					Spec: argov1alpha1.AppProjectSpec{
+						Destinations: []argov1alpha1.ApplicationDestination{
+							argov1alpha1.ApplicationDestination{
+								Name:      "arn:aws:eks:us:123456789876:cluster/Global-SRE",
+								Namespace: "github-checker",
+							},
+							argov1alpha1.ApplicationDestination{
+								Name:      "arn:aws:eks:us:123456789876:cluster/Global-Product",
+								Namespace: "another-checker",
+							},
+							argov1alpha1.ApplicationDestination{
+								Name:      "arn:aws:eks:us:123456789876:cluster/Global-FortKnox",
+								Namespace: "foreground-checker",
+							},
+						},
+						ClusterResourceWhitelist: []metav1.GroupKind{
+							metav1.GroupKind{
+								Group: "*",
+								Kind:  "*",
+							},
+						},
+					},
+				},
+				ApplicationTemplates: []argov1alpha1.Application{
+					argov1alpha1.Application{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "github-checker-app",
+						},
+						Spec: argov1alpha1.ApplicationSpec{
+							Source: argov1alpha1.ApplicationSource{
+								RepoURL:        "https://github.com/inloco/github-checker.git",
+								Path:           "namespaces/example/environment-overlays/env/cluster-overlays/cluster",
+								TargetRevision: "HEAD",
+							},
+							Destination: argov1alpha1.ApplicationDestination{
+								Name:      "arn:aws:eks:us:123456789876:cluster/Global-SRE",
+								Namespace: "github-checker",
+							},
+						},
+					},
+					argov1alpha1.Application{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "another-checker-app",
+						},
+						Spec: argov1alpha1.ApplicationSpec{
+							Source: argov1alpha1.ApplicationSource{
+								RepoURL:        "https://github.com/inloco/another-checker.git",
+								Path:           "namespaces/example/environment-overlays/env/cluster-overlays/cluster",
+								TargetRevision: "HEAD",
+							},
+							Destination: argov1alpha1.ApplicationDestination{
+								Name:      "arn:aws:eks:us:123456789876:cluster/Global-Product",
+								Namespace: "another-checker",
+							},
+						},
+					},
+				},
+			},
+		}),
 	)
 })
 
-func ArgoCDProject(argoCDProject main.ArgoCDProject, argoCDProjectYAML []byte) {
+func ArgoCDProject(argoCDProject main.ArgoCDProject) {
+	var argoCDProjectYaml []byte
+	if data, err := yaml.Marshal(argoCDProject); g.Expect(err).To(g.BeNil()) {
+		argoCDProjectYaml = data
+	}
+
 	ginkgo.By("contains only expected GKVs", func() {
 		var out bytes.Buffer
-		g.Expect(main.GenerateManifests(argoCDProjectYAML, &out)).To(g.Succeed())
+		g.Expect(main.GenerateManifests(argoCDProjectYaml, &out)).To(g.Succeed())
 
 		var actualGVKs []schema.GroupVersionKind
-		for _, resource := range separatorYAML.Split(out.String(), -1) {
+		for _, manifest := range separatorYaml.Split(out.String(), -1) {
 			var meta metav1.TypeMeta
-			g.Expect(yaml.Unmarshal([]byte(resource), &meta)).To(g.Succeed())
+			g.Expect(yaml.Unmarshal([]byte(manifest), &meta)).To(g.Succeed())
 			actualGVKs = append(actualGVKs, meta.GroupVersionKind())
 		}
 
-		g.Expect(actualGVKs).To(g.And(
-			gstruct.MatchElements(func(e interface{}) string {
-				return e.(schema.GroupVersionKind).String()
-			}, gstruct.AllowDuplicates, gstruct.Elements{
-				argov1alpha1.AppProjectSchemaGroupVersionKind.String():  g.Equal(argov1alpha1.AppProjectSchemaGroupVersionKind),
-				argov1alpha1.ApplicationSchemaGroupVersionKind.String(): g.Equal(argov1alpha1.ApplicationSchemaGroupVersionKind),
-			}),
-			g.HaveLen(1+len(argoCDProject.Spec.ApplicationTemplates)),
-		))
+		var findings []schema.GroupVersionKind
+
+		g.Expect(actualGVKs).To(g.ContainElement(argov1alpha1.AppProjectSchemaGroupVersionKind, &findings))
+		g.Expect(findings).To(g.HaveLen(1))
+
+		g.Expect(actualGVKs).To(g.ContainElement(argov1alpha1.ApplicationSchemaGroupVersionKind, &findings))
+		g.Expect(findings).To(g.HaveLen(len(argoCDProject.Spec.ApplicationTemplates)))
+
+		g.Expect(actualGVKs).To(g.HaveLen(1 + len(argoCDProject.Spec.ApplicationTemplates)))
 	})
 
 	ginkgo.By("contains expected AppProject", func() {
 		var out bytes.Buffer
-		g.Expect(main.GenerateManifests(argoCDProjectYAML, &out)).To(g.Succeed())
+		g.Expect(main.GenerateManifests(argoCDProjectYaml, &out)).To(g.Succeed())
 
 		var appProject argov1alpha1.AppProject
-		for _, resource := range separatorYAML.Split(out.String(), -1) {
+		for _, manifest := range separatorYaml.Split(out.String(), -1) {
 			var meta metav1.TypeMeta
-			g.Expect(yaml.Unmarshal([]byte(resource), &meta)).To(g.Succeed())
+			g.Expect(yaml.Unmarshal([]byte(manifest), &meta)).To(g.Succeed())
 
 			if meta.GroupVersionKind() == argov1alpha1.AppProjectSchemaGroupVersionKind {
-				g.Expect(yaml.Unmarshal([]byte(resource), &appProject)).To(g.Succeed())
+				g.Expect(yaml.Unmarshal([]byte(manifest), &appProject)).To(g.Succeed())
 				break
 			}
 		}
@@ -240,18 +233,18 @@ func ArgoCDProject(argoCDProject main.ArgoCDProject, argoCDProjectYAML []byte) {
 
 	ginkgo.By("contains expected Applications", func() {
 		var out bytes.Buffer
-		g.Expect(main.GenerateManifests(argoCDProjectYAML, &out)).To(g.Succeed())
+		g.Expect(main.GenerateManifests(argoCDProjectYaml, &out)).To(g.Succeed())
 
-		for _, resource := range separatorYAML.Split(out.String(), -1) {
+		for _, manifest := range separatorYaml.Split(out.String(), -1) {
 			var meta metav1.TypeMeta
-			g.Expect(yaml.Unmarshal([]byte(resource), &meta)).To(g.Succeed())
+			g.Expect(yaml.Unmarshal([]byte(manifest), &meta)).To(g.Succeed())
 
 			if meta.GroupVersionKind() != argov1alpha1.ApplicationSchemaGroupVersionKind {
 				continue
 			}
 
 			var app argov1alpha1.Application
-			g.Expect(yaml.Unmarshal([]byte(resource), &app)).To(g.Succeed())
+			g.Expect(yaml.Unmarshal([]byte(manifest), &app)).To(g.Succeed())
 
 			var argoCdProjectApp argov1alpha1.Application
 			for _, appTemplate := range argoCDProject.Spec.ApplicationTemplates {
@@ -282,5 +275,16 @@ func ArgoCDProject(argoCDProject main.ArgoCDProject, argoCDProjectYAML []byte) {
 				}),
 			}))
 		}
+
+		ginkgo.By("manifests contain nil status field", func() {
+			var out bytes.Buffer
+			g.Expect(main.GenerateManifests(argoCDProjectYaml, &out)).To(g.Succeed())
+
+			for _, manifest := range separatorYaml.Split(out.String(), -1) {
+				var resource map[string]interface{}
+				g.Expect(yaml.Unmarshal([]byte(manifest), &resource)).To(g.Succeed())
+				g.Expect(resource["status"]).To(g.BeNil())
+			}
+		})
 	})
 }
