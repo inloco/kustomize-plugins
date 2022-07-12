@@ -10,10 +10,10 @@ jobs:
           - ubuntu-latest
     runs-on: ${{ matrix.platform }}
     steps:
-      - name: Bootstrap Action
-        uses: inloco/actions-bootstrap@HEAD
+      - uses: actions/checkout@v2.3.4
+      - uses: actions/setup-go@v2.1.4
         with:
-          setup-go: 1.17
+          go-version: 1.17
       - name: Install Ginkgo
         run: go get github.com/onsi/ginkgo/ginkgo
       - name: Run Tests
@@ -33,10 +33,10 @@ jobs:
           - unnamespaced
     runs-on: ${{ matrix.platform }}
     steps:
-      - name: Bootstrap Action
-        uses: inloco/actions-bootstrap@HEAD
+      - uses: actions/checkout@v2.3.4
+      - uses: actions/setup-go@v2.1.4
         with:
-          setup-go: 1.17
+          go-version: 1.17
       - name: Make Plugin
         run: make ${{ matrix.plugin }}/plugin
       - name: Upload artifact
@@ -106,8 +106,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Bootstrap Action
-        uses: inloco/actions-bootstrap@HEAD
+      - uses: actions/checkout@v2.3.4
       - name: Update Git Tag
         run: sed "s/v0.0.0/${GITHUB_REF##*/}/g" -i ./hack/install.sh
       - name: Upload script Release Asset
