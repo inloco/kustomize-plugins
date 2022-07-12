@@ -24,11 +24,9 @@ setup-environment:
 	ln -Fs ${SRC_PATH} ${MOD_PATH}
 .PHONY: setup-environment
 
-test: setup-environment
+test:
 	@printf '${BOLD}${RED}make: *** [test]${RESET}${EOL}'
-	cd ${MOD_PATH} && \
-	go test           \
-		-v ./...
+	ginkgo ./...
 .PHONY: test
 
 argocdproject/plugin: setup-environment
