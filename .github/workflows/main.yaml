@@ -15,7 +15,7 @@ jobs:
         with:
           go-version: 1.17
       - name: Install Ginkgo
-        run: go get github.com/onsi/ginkgo/ginkgo
+        run: go install github.com/onsi/ginkgo/ginkgo@latest
       - name: Run Tests
         run: make test
   build:
