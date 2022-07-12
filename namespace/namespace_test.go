@@ -19,13 +19,14 @@ import (
 )
 
 var (
-	separatorYaml  = regexp.MustCompile("\n---\n")
+	separatorYaml = regexp.MustCompile("\n---\n")
+
 	namespaceGVK   = corev1.SchemeGroupVersion.WithKind(reflect.TypeOf(corev1.Namespace{}).Name())
 	roleBindingGVK = rbacv1.SchemeGroupVersion.WithKind(reflect.TypeOf(rbacv1.RoleBinding{}).Name())
 )
 
 var _ = ginkgo.Describe("Namespace", func() {
-	ginkgo.DescribeTable("entries", Namespace,
+	ginkgo.DescribeTable("", Namespace,
 		ginkgo.Entry("with access control", main.Namespace{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: schema.GroupVersion{

@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	yamlSeparator = "---\n"
+	panicSeparator = ": "
+	yamlSeparator  = "---\n"
 )
 
 type AccessLevel int
@@ -76,11 +77,11 @@ func main() {
 
 	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		log.Panic(filePath, ": ", err)
+		log.Panic(filePath, panicSeparator, err)
 	}
 
 	if err := GenerateManifests(data, os.Stdout); err != nil {
-		log.Panic(filePath, ": ", err)
+		log.Panic(filePath, panicSeparator, err)
 	}
 }
 
@@ -90,25 +91,10 @@ func GenerateManifests(data []byte, out io.Writer) error {
 		return err
 	}
 
-	var manifests [][]byte
-
-	ns, err := makeNamespace(&namespace)
+	manifests, err := makeManifests(&namespace)
 	if err != nil {
 		return err
 	}
-	manifests = append(manifests, ns)
-
-	readOnlyRoleBinding, err := makeRoleBinding(ReadOnly, &namespace)
-	if err != nil {
-		return err
-	}
-	manifests = append(manifests, readOnlyRoleBinding)
-
-	readWriteRoleBinding, err := makeRoleBinding(ReadWrite, &namespace)
-	if err != nil {
-		return err
-	}
-	manifests = append(manifests, readWriteRoleBinding)
 
 	for _, manifest := range manifests {
 		if _, err := out.Write([]byte(yamlSeparator)); err != nil {
@@ -121,6 +107,30 @@ func GenerateManifests(data []byte, out io.Writer) error {
 	}
 
 	return nil
+}
+
+func makeManifests(namespace *Namespace) ([][]byte, error) {
+	var manifests [][]byte
+
+	ns, err := makeNamespace(namespace)
+	if err != nil {
+		return nil, err
+	}
+	manifests = append(manifests, ns)
+
+	readOnlyRoleBinding, err := makeRoleBinding(ReadOnly, namespace)
+	if err != nil {
+		return nil, err
+	}
+	manifests = append(manifests, readOnlyRoleBinding)
+
+	readWriteRoleBinding, err := makeRoleBinding(ReadWrite, namespace)
+	if err != nil {
+		return nil, err
+	}
+	manifests = append(manifests, readWriteRoleBinding)
+
+	return manifests, nil
 }
 
 func makeNamespace(namespace *Namespace) ([]byte, error) {

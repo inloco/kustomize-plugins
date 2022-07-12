@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	yamlSeparator = "---\n"
+	panicSeparator = ": "
+	yamlSeparator  = "---\n"
 )
 
 type AccessLevel int
@@ -73,33 +74,24 @@ func main() {
 
 	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		log.Panic(filePath, ": ", err)
+		log.Panic(filePath, panicSeparator, err)
 	}
 
 	if err := GenerateManifests(data, os.Stdout); err != nil {
-		log.Panic(filePath, ": ", err)
+		log.Panic(filePath, panicSeparator, err)
 	}
 }
 
 func GenerateManifests(data []byte, out io.Writer) error {
-	var namespace Unnamespaced
-	if err := yaml.Unmarshal(data, &namespace); err != nil {
+	var unnamespaced Unnamespaced
+	if err := yaml.Unmarshal(data, &unnamespaced); err != nil {
 		return err
 	}
 
-	var manifests [][]byte
-
-	readOnlyClusterRoleBinding, err := makeClusterRoleBinding(ReadOnly, &namespace)
+	manifests, err := makeManifests(&unnamespaced)
 	if err != nil {
 		return err
 	}
-	manifests = append(manifests, readOnlyClusterRoleBinding)
-
-	readWriteClusterRoleBinding, err := makeClusterRoleBinding(ReadWrite, &namespace)
-	if err != nil {
-		return err
-	}
-	manifests = append(manifests, readWriteClusterRoleBinding)
 
 	for _, y := range manifests {
 		if _, err := out.Write([]byte(yamlSeparator)); err != nil {
@@ -112,6 +104,24 @@ func GenerateManifests(data []byte, out io.Writer) error {
 	}
 
 	return nil
+}
+
+func makeManifests(unnamespaced *Unnamespaced) ([][]byte, error) {
+	var manifests [][]byte
+
+	readOnlyClusterRoleBinding, err := makeClusterRoleBinding(ReadOnly, unnamespaced)
+	if err != nil {
+		return nil, err
+	}
+	manifests = append(manifests, readOnlyClusterRoleBinding)
+
+	readWriteClusterRoleBinding, err := makeClusterRoleBinding(ReadWrite, unnamespaced)
+	if err != nil {
+		return nil, err
+	}
+	manifests = append(manifests, readWriteClusterRoleBinding)
+
+	return manifests, nil
 }
 
 func makeClusterRoleBinding(accessLevel AccessLevel, unnamespaced *Unnamespaced) ([]byte, error) {

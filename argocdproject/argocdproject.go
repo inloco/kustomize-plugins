@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	separatorPanic  = ": "
-	separatorYAML   = "---\n"
+	panicSeparator  = ": "
+	yamlSeparator   = "---\n"
 	yamlStatusField = "status"
 )
 
@@ -83,11 +83,11 @@ func main() {
 
 	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		log.Panic(filePath, separatorPanic, err)
+		log.Panic(filePath, panicSeparator, err)
 	}
 
 	if err := GenerateManifests(data, os.Stdout); err != nil {
-		log.Panic(filePath, separatorPanic, err)
+		log.Panic(filePath, panicSeparator, err)
 	}
 }
 
@@ -97,22 +97,13 @@ func GenerateManifests(data []byte, out io.Writer) error {
 		return err
 	}
 
-	var manifests [][]byte
-
-	b, err := makeAppProject(&argocdProject)
+	manifests, err := makeManifests(&argocdProject)
 	if err != nil {
 		return err
 	}
-	manifests = append(manifests, b)
-
-	bs, err := makeApplications(argocdProject)
-	if err != nil {
-		return err
-	}
-	manifests = append(manifests, bs...)
 
 	for _, manifest := range manifests {
-		if _, err := out.Write([]byte(separatorYAML)); err != nil {
+		if _, err := out.Write([]byte(yamlSeparator)); err != nil {
 			return err
 		}
 
@@ -122,6 +113,24 @@ func GenerateManifests(data []byte, out io.Writer) error {
 	}
 
 	return nil
+}
+
+func makeManifests(argocdProject *ArgoCDProject) ([][]byte, error) {
+	var manifests [][]byte
+
+	b, err := makeAppProject(argocdProject)
+	if err != nil {
+		return nil, err
+	}
+	manifests = append(manifests, b)
+
+	bs, err := makeApplications(argocdProject)
+	if err != nil {
+		return nil, err
+	}
+	manifests = append(manifests, bs...)
+
+	return manifests, nil
 }
 
 func makeAppProject(argocdProject *ArgoCDProject) ([]byte, error) {
@@ -184,7 +193,7 @@ func makeProjectRole(accessLevel accessLevel, argocdProject *ArgoCDProject, appP
 	}
 }
 
-func makeApplications(argocdProject ArgoCDProject) ([][]byte, error) {
+func makeApplications(argocdProject *ArgoCDProject) ([][]byte, error) {
 	apps := argocdProject.Spec.ApplicationTemplates
 	manifests := make([][]byte, 0, len(apps))
 

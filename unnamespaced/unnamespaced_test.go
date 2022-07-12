@@ -17,12 +17,13 @@ import (
 )
 
 var (
-	separatorYaml         = regexp.MustCompile("\n---\n")
+	separatorYaml = regexp.MustCompile("\n---\n")
+
 	clusterRoleBindingGVK = rbacv1.SchemeGroupVersion.WithKind(reflect.TypeOf(rbacv1.ClusterRoleBinding{}).Name())
 )
 
 var _ = ginkgo.Describe("Unnamespace", func() {
-	ginkgo.DescribeTable("entries", Unnamespaced,
+	ginkgo.DescribeTable("", Unnamespaced,
 		ginkgo.Entry("with complete access control", main.Unnamespaced{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: schema.GroupVersion{

@@ -16,8 +16,14 @@ metadata:
   name: _
 spec:
   directories:
-    - projects/**/argocd/**/staging-product
-    - !projects/sre
+    - base: git
+      globs:
+        - projects/**/argocd/**/production-product/
+        - '!projects/**/argocd/**/production-product/**'
+    - base: pwd
+      globs:
+        - ../../projects/**/argocd/**/staging-product/
+        - '!../../projects/**/argocd/**/staging-product/**'
 ```
 
 Now we can specify `./kustomizeBuild.yaml` as a generator on `kustomization.yaml`:

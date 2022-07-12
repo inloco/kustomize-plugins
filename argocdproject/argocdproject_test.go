@@ -21,7 +21,7 @@ var (
 )
 
 var _ = ginkgo.Describe("ArgoCDProject", func() {
-	ginkgo.DescribeTable("entries", ArgoCDProject,
+	ginkgo.DescribeTable("", ArgoCDProject,
 		ginkgo.Entry("with single application", main.ArgoCDProject{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: schema.GroupVersion{
