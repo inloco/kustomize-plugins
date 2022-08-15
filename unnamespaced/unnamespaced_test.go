@@ -13,7 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/yaml"
 
-	"github.com/inloco/iac-kustomize-plugins/unnamespaced"
+	main "github.com/inloco/iac-kustomize-plugins/unnamespaced"
 )
 
 var (
