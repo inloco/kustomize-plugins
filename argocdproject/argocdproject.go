@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	panicSeparator  = ": "
-	yamlSeparator   = "---\n"
+	separatorPanic = ": "
+	separatorYaml  = "---\n"
+
 	yamlStatusField = "status"
 )
 
@@ -42,18 +43,18 @@ func (a accessLevel) Policies(appProjectName string) []string {
 	switch a {
 	case ReadOnly:
 		return []string{
-			fmt.Sprintf("p, proj:%s:read-only, *, get, %s/*, allow", appProjectName, appProjectName),
+			fmt.Sprintf("p, proj:%[1]s:%[2]s, *, get, %[1]s/*, allow", appProjectName, ReadOnly),
 		}
 	case ReadSync:
 		return []string{
-			fmt.Sprintf("p, proj:%s:read-sync, applications, action/apps/Deployment/restart, %s/*, allow", appProjectName, appProjectName),
-			fmt.Sprintf("p, proj:%s:read-sync, applications, action/argoproj.io/Rollout/abort, %s/*, allow", appProjectName, appProjectName),
-			fmt.Sprintf("p, proj:%s:read-sync, applications, action/argoproj.io/Rollout/promote-full, %s/*, allow", appProjectName, appProjectName),
-			fmt.Sprintf("p, proj:%s:read-sync, applications, action/argoproj.io/Rollout/restart, %s/*, allow", appProjectName, appProjectName),
-			fmt.Sprintf("p, proj:%s:read-sync, applications, action/argoproj.io/Rollout/resume, %s/*, allow", appProjectName, appProjectName),
-			fmt.Sprintf("p, proj:%s:read-sync, applications, action/argoproj.io/Rollout/retry, %s/*, allow", appProjectName, appProjectName),
-			fmt.Sprintf("p, proj:%s:read-sync, applications, sync, %s/*, allow", appProjectName, appProjectName),
-			fmt.Sprintf("g, proj:%s:read-sync, proj:%s:read-only", appProjectName, appProjectName),
+			fmt.Sprintf("p, proj:%[1]s:%[2]s, applications, action/apps/Deployment/restart, %[1]s/*, allow", appProjectName, ReadSync),
+			fmt.Sprintf("p, proj:%[1]s:%[2]s, applications, action/argoproj.io/Rollout/abort, %[1]s/*, allow", appProjectName, ReadSync),
+			fmt.Sprintf("p, proj:%[1]s:%[2]s, applications, action/argoproj.io/Rollout/promote-full, %[1]s/*, allow", appProjectName, ReadSync),
+			fmt.Sprintf("p, proj:%[1]s:%[2]s, applications, action/argoproj.io/Rollout/restart, %[1]s/*, allow", appProjectName, ReadSync),
+			fmt.Sprintf("p, proj:%[1]s:%[2]s, applications, action/argoproj.io/Rollout/resume, %[1]s/*, allow", appProjectName, ReadSync),
+			fmt.Sprintf("p, proj:%[1]s:%[2]s, applications, action/argoproj.io/Rollout/retry, %[1]s/*, allow", appProjectName, ReadSync),
+			fmt.Sprintf("p, proj:%[1]s:%[2]s, applications, sync, %[1]s/*, allow", appProjectName, ReadSync),
+			fmt.Sprintf("g, proj:%[1]s:%[2]s, proj:%[1]s:%[3]s", appProjectName, ReadSync, ReadOnly),
 		}
 	default:
 		panic(fmt.Sprintf("unknown access level %d", a))
@@ -83,11 +84,11 @@ func main() {
 
 	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		log.Panic(filePath, panicSeparator, err)
+		log.Panic(filePath, separatorPanic, err)
 	}
 
 	if err := GenerateManifests(data, os.Stdout); err != nil {
-		log.Panic(filePath, panicSeparator, err)
+		log.Panic(filePath, separatorPanic, err)
 	}
 }
 
@@ -103,7 +104,7 @@ func GenerateManifests(data []byte, out io.Writer) error {
 	}
 
 	for _, manifest := range manifests {
-		if _, err := out.Write([]byte(yamlSeparator)); err != nil {
+		if _, err := out.Write([]byte(separatorYaml)); err != nil {
 			return err
 		}
 
