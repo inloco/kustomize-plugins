@@ -18,6 +18,8 @@ const (
 	separatorPanic = ": "
 	separatorYaml  = "---\n"
 
+	stagingEnvironment = "staging"
+
 	yamlStatusField = "status"
 )
 
@@ -39,14 +41,15 @@ func (a accessLevel) String() string {
 	}
 }
 
-func (a accessLevel) Policies(appProjectName string) []string {
+func (a accessLevel) Policies(appProjectName string, environment string) []string {
 	switch a {
 	case ReadOnly:
 		return []string{
 			fmt.Sprintf("p, proj:%[1]s:%[2]s, *, get, %[1]s/*, allow", appProjectName, ReadOnly),
 		}
+
 	case ReadSync:
-		return []string{
+		defaultPolicies := []string{
 			fmt.Sprintf("p, proj:%[1]s:%[2]s, applications, action/apps/Deployment/restart, %[1]s/*, allow", appProjectName, ReadSync),
 			fmt.Sprintf("p, proj:%[1]s:%[2]s, applications, action/argoproj.io/Rollout/abort, %[1]s/*, allow", appProjectName, ReadSync),
 			fmt.Sprintf("p, proj:%[1]s:%[2]s, applications, action/argoproj.io/Rollout/promote-full, %[1]s/*, allow", appProjectName, ReadSync),
@@ -56,6 +59,11 @@ func (a accessLevel) Policies(appProjectName string) []string {
 			fmt.Sprintf("p, proj:%[1]s:%[2]s, applications, sync, %[1]s/*, allow", appProjectName, ReadSync),
 			fmt.Sprintf("g, proj:%[1]s:%[2]s, proj:%[1]s:%[3]s", appProjectName, ReadSync, ReadOnly),
 		}
+		if environment == stagingEnvironment {
+			defaultPolicies = append(defaultPolicies, fmt.Sprintf("p, proj:%[1]s:%[2]s, applications, override, %[1]s/*, allow", appProjectName, ReadSync))
+		}
+		return defaultPolicies
+
 	default:
 		panic(fmt.Sprintf("unknown access level %d", a))
 	}
@@ -189,7 +197,7 @@ func makeProjectRole(accessLevel accessLevel, argocdProject *ArgoCDProject, appP
 
 	return &argov1alpha1.ProjectRole{
 		Name:     accessLevel.String(),
-		Policies: accessLevel.Policies(appProject.Name),
+		Policies: accessLevel.Policies(appProject.Name, argocdProject.Spec.Environment),
 		Groups:   groups,
 	}
 }

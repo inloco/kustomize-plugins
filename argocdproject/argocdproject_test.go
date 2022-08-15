@@ -13,7 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/yaml"
 
-	"github.com/inloco/iac-kustomize-plugins/argocdproject"
+	main "github.com/inloco/iac-kustomize-plugins/argocdproject"
 )
 
 var (
@@ -43,7 +43,7 @@ var _ = ginkgo.Describe("ArgoCDProject", func() {
 						"sre:eng-1",
 					},
 				},
-				Environment: "production",
+				Environment: "staging",
 				ApplicationTemplates: []argov1alpha1.Application{
 					argov1alpha1.Application{
 						ObjectMeta: metav1.ObjectMeta{
@@ -220,11 +220,11 @@ func ArgoCDProject(argoCDProject main.ArgoCDProject) {
 				}, gstruct.Elements{
 					main.ReadOnly.String(): gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
 						"Groups":   g.ContainElements(argoCDProject.Spec.AccessControl.ReadOnly),
-						"Policies": g.ContainElements(main.ReadOnly.Policies(argoCDProject.Name)),
+						"Policies": g.ContainElements(main.ReadOnly.Policies(argoCDProject.Name, argoCDProject.Spec.Environment)),
 					}),
 					main.ReadSync.String(): gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
 						"Groups":   g.ContainElements(argoCDProject.Spec.AccessControl.ReadSync),
-						"Policies": g.ContainElements(main.ReadSync.Policies(argoCDProject.Name)),
+						"Policies": g.ContainElements(main.ReadSync.Policies(argoCDProject.Name, argoCDProject.Spec.Environment)),
 					}),
 				}),
 			}),
