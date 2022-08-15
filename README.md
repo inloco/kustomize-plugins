@@ -1,4 +1,4 @@
-# IaC Kustomize Plugins
+# Kustomize Generator Plugins
 
 ## Setup
 
@@ -7,15 +7,15 @@ To install all plugins, download the binaries to the Kustomize plugin folder and
 ### Linux 64-bits and/or macOS 64-bits
 
 ```bash
-VERSION=$(wget -qO- https://api.github.com/repos/inloco/iac-kustomize-plugins/releases/latest | jq -r '.tag_name')
-wget -qO- "https://github.com/inloco/iac-kustomize-plugins/releases/download/${VERSION}/install.sh" | sh
+VERSION=$(wget -qO- https://api.github.com/repos/inloco/kustomize-generator-plugins/releases/latest | jq -r '.tag_name')
+wget -qO- "https://github.com/inloco/kustomize-generator-plugins/releases/download/${VERSION}/install.sh" | sh
 ```
 
 ### Manual Build and Install for Other Systems and/or Architectures
 
 ```bash
-git clone https://github.com/inloco/iac-kustomize-plugins
-cd iac-kustomize-plugins
+git clone https://github.com/inloco/kustomize-generator-plugins
+cd kustomize-generator-plugins
 make install
 ```
 

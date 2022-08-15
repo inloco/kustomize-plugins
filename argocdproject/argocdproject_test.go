@@ -13,7 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/yaml"
 
-	main "github.com/inloco/iac-kustomize-plugins/argocdproject"
+	main "github.com/inloco/kustomize-generator-plugins/argocdproject"
 )
 
 var (
