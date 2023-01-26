@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -17,28 +18,28 @@ import (
 )
 
 const (
-	separatorGV    = "/"
-	separatorPanic = ": "
-	separatorYAML  = "---\n"
+	separatorGroupVersion = "/"
+	separatorPanic        = ": "
+	separatorYaml         = "---\n"
 
-	verbGet   = "get"
-	verbList  = "list"
-	verbWatch = "watch"
+	VerbGet   = "get"
+	VerbList  = "list"
+	VerbWatch = "watch"
 
-	coreGroupName      = ""
+	CoreGroupName      = ""
 	secretResourceName = "secrets"
 
-	namespacedReadOnlyRoleName    = "namespaced-ro"
-	namespacedReadWriteRoleName   = "namespaced-rw"
-	unnamespacedReadOnlyRoleName  = "unnamespaced-ro"
-	unnamespacedReadWriteRoleName = "unnamespaced-rw"
+	NamespacedReadOnlyRoleName    = "namespaced-ro"
+	NamespacedReadWriteRoleName   = "namespaced-rw"
+	UnnamespacedReadOnlyRoleName  = "unnamespaced-ro"
+	UnnamespacedReadWriteRoleName = "unnamespaced-rw"
 )
 
 var (
 	readOnlyVerbs = []string{
-		verbGet,
-		verbList,
-		verbWatch,
+		VerbGet,
+		VerbList,
+		VerbWatch,
 	}
 
 	readWriteVerbs = []string{
@@ -60,55 +61,22 @@ type ClusterRolesKubeConfig struct {
 func main() {
 	filePath := os.Args[1]
 
-	loadingRules, overrides, err := readClientConfigSettings(filePath)
+	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		log.Panic(filePath, separatorPanic, err)
 	}
 
-	deferredLoadingClientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, overrides)
-	clientConfig, err := deferredLoadingClientConfig.ClientConfig()
+	apiResourceLists, err := getApiResourceLists(data)
 	if err != nil {
 		log.Panic(filePath, separatorPanic, err)
 	}
 
-	discoveryClient, err := discovery.NewDiscoveryClientForConfig(clientConfig)
-	if err != nil {
+	if err := GenerateManifests(apiResourceLists, os.Stdout); err != nil {
 		log.Panic(filePath, separatorPanic, err)
-	}
-
-	index, err := buildIndex(discoveryClient)
-	if err != nil {
-		log.Panic(filePath, separatorPanic, err)
-	}
-
-	clusterRoles, err := makeClusterRoles(index)
-	if err != nil {
-		log.Panic(filePath, separatorPanic, err)
-	}
-	canonicalizeClusterRoles(clusterRoles)
-
-	for _, clusterRole := range clusterRoles {
-		bytes, err := yaml.Marshal(clusterRole)
-		if err != nil {
-			log.Panic(filePath, separatorPanic, err)
-		}
-
-		if _, err := os.Stdout.Write(bytes); err != nil {
-			log.Panic(filePath, separatorPanic, err)
-		}
-
-		if _, err := os.Stdout.Write([]byte(separatorYAML)); err != nil {
-			log.Panic(filePath, separatorPanic, err)
-		}
 	}
 }
 
-func readClientConfigSettings(filePath string) (*clientcmd.ClientConfigLoadingRules, *clientcmd.ConfigOverrides, error) {
-	data, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return nil, nil, err
-	}
-
+func getApiResourceLists(data []byte) ([]*metav1.APIResourceList, error) {
 	clusterRoles := ClusterRoles{
 		KubeConfig: ClusterRolesKubeConfig{
 			LoadingRules: clientcmd.NewDefaultClientConfigLoadingRules(),
@@ -116,29 +84,65 @@ func readClientConfigSettings(filePath string) (*clientcmd.ClientConfigLoadingRu
 		},
 	}
 	if err := yaml.Unmarshal(data, &clusterRoles); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return clusterRoles.KubeConfig.LoadingRules, clusterRoles.KubeConfig.Overrides, nil
+	deferredLoadingClientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		clusterRoles.KubeConfig.LoadingRules,
+		clusterRoles.KubeConfig.Overrides,
+	)
+	clientConfig, err := deferredLoadingClientConfig.ClientConfig()
+	if err != nil {
+		return nil, err
+	}
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(clientConfig)
+	if err != nil {
+		return nil, err
+	}
+	_, apiResourceLists, err := discoveryClient.ServerGroupsAndResources()
+
+	return apiResourceLists, err
+}
+
+func GenerateManifests(apiResourceLists []*metav1.APIResourceList, out io.Writer) error {
+	groupIndex, err := makeGroupIndex(apiResourceLists)
+	if err != nil {
+		return err
+	}
+	clusterRoles, err := makeClusterRoles(groupIndex)
+	if err != nil {
+		return err
+	}
+
+	for _, clusterRole := range clusterRoles {
+		if _, err := out.Write([]byte(separatorYaml)); err != nil {
+			return err
+		}
+
+		b, err := yaml.Marshal(clusterRole)
+		if err != nil {
+			return err
+		}
+		if _, err := out.Write(b); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 type Namespaced bool
 type ResourceIndex map[string]Namespaced
 type GroupIndex map[string]ResourceIndex
 
-func buildIndex(discoveryClient *discovery.DiscoveryClient) (GroupIndex, error) {
-	_, resourceLists, err := discoveryClient.ServerGroupsAndResources()
-	if err != nil {
-		return nil, err
-	}
-
+func makeGroupIndex(apiResourceLists []*metav1.APIResourceList) (GroupIndex, error) {
 	groupIndex := make(GroupIndex)
-	for _, resourceList := range resourceLists {
+	for _, resourceList := range apiResourceLists {
 		groupVersion := resourceList.GroupVersion
 
 		var groupName string
-		if separatorIndex := strings.Index(groupVersion, separatorGV); separatorIndex != -1 {
-			groupName = groupVersion[:separatorIndex]
+		if indexSeparator := strings.Index(groupVersion, separatorGroupVersion); indexSeparator != -1 {
+			groupName = groupVersion[:indexSeparator]
 		}
 
 		resourceIndex, ok := groupIndex[groupName]
@@ -155,28 +159,30 @@ func buildIndex(discoveryClient *discovery.DiscoveryClient) (GroupIndex, error) 
 	return groupIndex, nil
 }
 
-func makeClusterRoles(index GroupIndex) ([]rbacv1.ClusterRole, error) {
+func makeClusterRoles(groupIndex GroupIndex) ([]rbacv1.ClusterRole, error) {
 	var clusterRoles []rbacv1.ClusterRole
 
-	namespacedRoles, err := makeNamespacedClusterRoles(index)
+	namespacedRoles, err := makeNamespacedClusterRoles(groupIndex)
 	if err != nil {
 		return nil, err
 	}
 	clusterRoles = append(clusterRoles, namespacedRoles...)
 
-	unnamespacedRoles, err := makeUnnamespacedClusterRoles(index)
+	unnamespacedRoles, err := makeUnnamespacedClusterRoles(groupIndex)
 	if err != nil {
 		return nil, err
 	}
 	clusterRoles = append(clusterRoles, unnamespacedRoles...)
 
+	canonicalizeClusterRoles(clusterRoles)
+
 	return clusterRoles, nil
 }
 
-func makeNamespacedClusterRoles(index GroupIndex) ([]rbacv1.ClusterRole, error) {
+func makeNamespacedClusterRoles(groupIndex GroupIndex) ([]rbacv1.ClusterRole, error) {
 	coreRule := rbacv1.PolicyRule{
 		APIGroups: []string{
-			coreGroupName,
+			CoreGroupName,
 		},
 		Verbs: readOnlyVerbs,
 	}
@@ -188,8 +194,8 @@ func makeNamespacedClusterRoles(index GroupIndex) ([]rbacv1.ClusterRole, error) 
 		Verbs: readOnlyVerbs,
 	}
 
-	for group, resources := range index {
-		if group != coreGroupName {
+	for group, resources := range groupIndex {
+		if group != CoreGroupName {
 			othersRule.APIGroups = append(othersRule.APIGroups, group)
 			continue
 		}
@@ -205,24 +211,25 @@ func makeNamespacedClusterRoles(index GroupIndex) ([]rbacv1.ClusterRole, error) 
 		APIVersion: rbacv1.SchemeGroupVersion.String(),
 		Kind:       reflect.TypeOf(rbacv1.ClusterRole{}).Name(),
 	}
+
 	clusterRoles := []rbacv1.ClusterRole{
-		rbacv1.ClusterRole{
+		{
 			TypeMeta: typeMeta,
 			ObjectMeta: metav1.ObjectMeta{
-				Name: namespacedReadOnlyRoleName,
+				Name: NamespacedReadOnlyRoleName,
 			},
 			Rules: []rbacv1.PolicyRule{
 				coreRule,
 				othersRule,
 			},
 		},
-		rbacv1.ClusterRole{
+		{
 			TypeMeta: typeMeta,
 			ObjectMeta: metav1.ObjectMeta{
-				Name: namespacedReadWriteRoleName,
+				Name: NamespacedReadWriteRoleName,
 			},
 			Rules: []rbacv1.PolicyRule{
-				rbacv1.PolicyRule{
+				{
 					APIGroups: []string{
 						rbacv1.APIGroupAll,
 					},
@@ -234,19 +241,23 @@ func makeNamespacedClusterRoles(index GroupIndex) ([]rbacv1.ClusterRole, error) 
 			},
 		},
 	}
+
 	return clusterRoles, nil
 }
 
-func makeUnnamespacedClusterRoles(index GroupIndex) ([]rbacv1.ClusterRole, error) {
+func makeUnnamespacedClusterRoles(groupIndex GroupIndex) ([]rbacv1.ClusterRole, error) {
 	var readOnlyRules []rbacv1.PolicyRule
 	var readWriteRules []rbacv1.PolicyRule
-	for group, resources := range index {
+
+	for group, resources := range groupIndex {
 		var unnamespacedResources []string
+
 		for resource, namespaced := range resources {
 			if !namespaced {
 				unnamespacedResources = append(unnamespacedResources, resource)
 			}
 		}
+
 		if len(unnamespacedResources) == 0 {
 			continue
 		}
@@ -272,22 +283,24 @@ func makeUnnamespacedClusterRoles(index GroupIndex) ([]rbacv1.ClusterRole, error
 		APIVersion: rbacv1.SchemeGroupVersion.String(),
 		Kind:       reflect.TypeOf(rbacv1.ClusterRole{}).Name(),
 	}
+
 	clusterRoles := []rbacv1.ClusterRole{
-		rbacv1.ClusterRole{
+		{
 			TypeMeta: typeMeta,
 			ObjectMeta: metav1.ObjectMeta{
-				Name: unnamespacedReadOnlyRoleName,
+				Name: UnnamespacedReadOnlyRoleName,
 			},
 			Rules: readOnlyRules,
 		},
-		rbacv1.ClusterRole{
+		{
 			TypeMeta: typeMeta,
 			ObjectMeta: metav1.ObjectMeta{
-				Name: unnamespacedReadWriteRoleName,
+				Name: UnnamespacedReadWriteRoleName,
 			},
 			Rules: readWriteRules,
 		},
 	}
+
 	return clusterRoles, nil
 }
 
