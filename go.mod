@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/argoproj/argo-cd/v2 v2.5.8
 	github.com/moby/buildkit v0.9.3
-	github.com/moby/moby v20.10.12+incompatible
+	github.com/moby/moby v20.10.20+incompatible
 	github.com/onsi/ginkgo/v2 v2.1.4
 	github.com/onsi/gomega v1.19.0
 	k8s.io/api v0.24.2
