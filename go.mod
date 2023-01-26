@@ -1,6 +1,6 @@
 module github.com/inloco/kustomize-generator-plugins
 
-go 1.17
+go 1.18
 
 require (
 	github.com/argoproj/argo-cd/v2 v2.5.8
