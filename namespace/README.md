@@ -1,4 +1,4 @@
-# Namespace Kustomize Generator Plugin
+# Namespace Generator
 
 It is a plugin for [Kustomize](https://github.com/kubernetes-sigs/kustomize) that allows you to generate a Namespace
 with its access control definitions.

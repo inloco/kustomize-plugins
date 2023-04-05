@@ -1,4 +1,4 @@
-module github.com/inloco/kustomize-generator-plugins
+module github.com/inloco/kustomize-plugins
 
 go 1.18
 

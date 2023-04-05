@@ -1,4 +1,4 @@
-# ClusterRoles Kustomize Generator Plugin
+# ClusterRoles Generator
 
 It is a plugin for [Kustomize](https://github.com/kubernetes-sigs/kustomize) that dynamically generates read-only and
 read-write ClusterRules for namespaced and unnamespaced resources using the K8s Discovery API.

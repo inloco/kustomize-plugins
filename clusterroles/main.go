@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"reflect"
@@ -104,7 +103,7 @@ func main() {
 }
 
 func readClientConfigSettings(filePath string) (*clientcmd.ClientConfigLoadingRules, *clientcmd.ConfigOverrides, error) {
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, nil, err
 	}

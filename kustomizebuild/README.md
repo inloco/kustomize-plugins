@@ -1,11 +1,11 @@
-# KustomizeBuild Kustomize Generator Plugin
+# KustomizeBuild Generator
 
 It is a plugin for [Kustomize](https://github.com/kubernetes-sigs/kustomize) that allows you to run multiple
 kustomizations at once. It receives a list of directories as input, which uses the same syntax as `.gitignore`.
 
 ## Using
 
-A KustomizeBuild can be defined as:
+A KustomizeBuild generator can be defined as:
 
 ```yaml
 # kustomizeBuild.yaml

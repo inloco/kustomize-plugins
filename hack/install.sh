@@ -4,7 +4,7 @@ set -e
 OS_ARCH=$(uname -m | sed 's/x86_64/amd64/g')
 OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
 PLACEMENT=${XDG_CONFIG_HOME:-$HOME/.config}/kustomize/plugin/incognia.com/v1alpha1
-RELEASE_URL=https://github.com/inloco/kustomize-generator-plugins/releases/download/v0.0.0
+RELEASE_URL=https://github.com/inloco/kustomize-plugins/releases/download/v0.0.0
 
 for KIND in ArgoCDProject ClusterRoles KustomizeBuild Namespace Unnamespaced
 do

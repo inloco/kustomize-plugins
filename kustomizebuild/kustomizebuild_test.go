@@ -16,7 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 
-	main "github.com/inloco/kustomize-generator-plugins/kustomizebuild"
+	main "github.com/inloco/kustomize-plugins/kustomizebuild"
 )
 
 const (

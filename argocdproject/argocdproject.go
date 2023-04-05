@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -90,7 +89,7 @@ type AppProjectAccessControl struct {
 func main() {
 	filePath := os.Args[1]
 
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Panic(filePath, separatorPanic, err)
 	}

@@ -30,6 +30,7 @@ jobs:
           - clusterroles
           - kustomizebuild
           - namespace
+          - template
           - unnamespaced
     runs-on: ${{ matrix.platform }}
     steps:
@@ -79,6 +80,7 @@ jobs:
           - clusterroles
           - kustomizebuild
           - namespace
+          - template
           - unnamespaced
     runs-on: ubuntu-latest
     permissions:

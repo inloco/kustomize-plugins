@@ -1,4 +1,4 @@
-# ArgoCDProject Kustomize Generator Plugin
+# ArgoCDProject Generator
 
 It is a plugin for [Kustomize](https://github.com/kubernetes-sigs/kustomize) that allows you to generate Argo's
 AppProject and Applications with its access control definitions.

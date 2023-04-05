@@ -1,4 +1,4 @@
-# Unnamespaced Kustomize Generator Plugin
+# Unnamespaced Generator
 
 It is a plugin for [Kustomize](https://github.com/kubernetes-sigs/kustomize) that allows you to generate
 ClusterRoleBindings to `unnamedspaced-ro` and `unnamedspaced-rw` ClusterRoles.

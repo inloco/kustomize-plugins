@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -76,7 +75,7 @@ type Directory struct {
 func main() {
 	filePath := os.Args[1]
 
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Panic(filePath, panicSeparator, err)
 	}

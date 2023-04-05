@@ -73,6 +73,17 @@ namespace/plugin: setup-environment
 		-v                                         \
 		./namespace
 
+template/plugin: setup-environment
+	@printf '${BOLD}${RED}make: *** [template/plugin]${RESET}${EOL}'
+	cd ${MOD_PATH}                              && \
+	go build                                       \
+		-o 'template/plugin'                      \
+		-a                                         \
+		-installsuffix 'cgo'                       \
+		-gcflags 'all=-trimpath "${TMP_PATH}/src"' \
+		-v                                         \
+		./template
+
 unnamespaced/plugin: setup-environment
 	@printf '${BOLD}${RED}make: *** [unnamespaced/plugin]${RESET}${EOL}'
 	cd ${MOD_PATH}                              && \
@@ -84,7 +95,7 @@ unnamespaced/plugin: setup-environment
 		-v                                         \
 		./unnamespaced
 
-build: argocdproject/plugin clusterroles/plugin kustomizebuild/plugin namespace/plugin unnamespaced/plugin
+build: argocdproject/plugin clusterroles/plugin kustomizebuild/plugin namespace/plugin template/plugin unnamespaced/plugin
 .PHONY: build
 
 install-argocdproject: argocdproject/plugin
@@ -111,11 +122,17 @@ install-namespace: namespace/plugin
 	cp ./namespace/plugin ${PLACEMENT}/namespace/Namespace
 .PHONY: install-namespace
 
+install-template: template/plugin
+	@printf '${BOLD}${RED}make: *** [install-template]${RESET}${EOL}'
+	mkdir -p ${PLACEMENT}/template
+	cp ./template/plugin ${PLACEMENT}/template/Template
+.PHONY: install-template
+
 install-unnamespaced: unnamespaced/plugin
 	@printf '${BOLD}${RED}make: *** [install-unnamespaced]${RESET}${EOL}'
 	mkdir -p ${PLACEMENT}/unnamespaced
 	cp ./unnamespaced/plugin ${PLACEMENT}/unnamespaced/Unnamespaced
 .PHONY: install-unnamespaced
 
-install: install-argocdproject install-clusterroles install-kustomizebuild install-namespace install-unnamespaced
+install: install-argocdproject install-clusterroles install-kustomizebuild install-namespace install-template install-unnamespaced
 .PHONY: install
