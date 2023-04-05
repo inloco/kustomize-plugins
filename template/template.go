@@ -13,7 +13,6 @@ import (
 const (
 	panicSeparator = ": "
 
-	tmplName   = "_"
 	tmplPrefix = "([{"
 	tmplSuffix = "}])"
 	tmplOption = "missingkey=error"
@@ -39,18 +38,19 @@ func main() {
 }
 
 func GenerateManifests(data []byte, out io.Writer) error {
-	var templateTransform Template
-	if err := yaml.Unmarshal(data, &templateTransform); err != nil {
+	var object Template
+	if err := yaml.Unmarshal(data, &object); err != nil {
 		return err
 	}
+	name := object.GetName()
 
-	tmpl, err := template.New(tmplName).
+	tmpl, err := template.New(name).
 		Delims(tmplPrefix, tmplSuffix).
 		Option(tmplOption).
-		ParseFS(virtualFS{}, tmplName)
+		ParseFS(virtualFS{}, name)
 	if err != nil {
 		return err
 	}
 
-	return tmpl.Execute(out, templateTransform.Data)
+	return tmpl.Execute(out, object.Data)
 }
