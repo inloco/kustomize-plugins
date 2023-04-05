@@ -5,31 +5,21 @@ import (
 	"os"
 )
 
-// virtualFS encapsulates the stdin to enable text/template lib to receive it as input.
-// Consequently, delegating file read handling to the text/template lib
+// virtualFS implements io/fs.FS to enable text/template.ParseFS to receive
+// os.Stdin as input.
 type virtualFS struct{}
 
 var _ fs.FS = (*virtualFS)(nil)
 
-// Open always returns stdin
-func (v virtualFS) Open(_ string) (fs.File, error) {
+// Open always returns os.Stdin.
+func (_ virtualFS) Open(_ string) (fs.File, error) {
 	return virtualFile{os.Stdin}, nil
 }
 
+// virtualFile is io/fs.File wrapper that overrides io/fs.File.Close.
 type virtualFile struct{ fs.File }
 
-var _ fs.File = (*virtualFile)(nil)
-
-func (v virtualFile) Stat() (fs.FileInfo, error) {
-	return v.File.Stat()
-}
-
-func (v virtualFile) Read(bytes []byte) (int, error) {
-	return v.File.Read(bytes)
-}
-
-// Close avoid closing the stdin since the text/template lib will try to close the stdin.
-// stdin cannot be closed since it can only be opened once per execution
-func (v virtualFile) Close() error {
+// Close is NOP and always return nil to avoid closing the underlying file.
+func (_ virtualFile) Close() error {
 	return nil
 }
