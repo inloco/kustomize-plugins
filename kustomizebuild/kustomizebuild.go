@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/moby/buildkit/frontend/dockerfile/dockerignore"
-	"github.com/moby/moby/pkg/fileutils"
+	"github.com/moby/patternmatcher"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/api/types"
@@ -123,8 +123,8 @@ func makeManifests(kustomizeBuild *KustomizeBuild) ([][]byte, error) {
 	return manifests, nil
 }
 
-func makePatternMatchers(kustomizeBuild *KustomizeBuild) (map[directoryBase]*fileutils.PatternMatcher, error) {
-	patternMatchers := make(map[directoryBase]*fileutils.PatternMatcher)
+func makePatternMatchers(kustomizeBuild *KustomizeBuild) (map[directoryBase]*patternmatcher.PatternMatcher, error) {
+	patternMatchers := make(map[directoryBase]*patternmatcher.PatternMatcher)
 
 	gitPatternMatcher, err := makePatternMatcher(git, kustomizeBuild)
 	if err != nil {
@@ -141,7 +141,7 @@ func makePatternMatchers(kustomizeBuild *KustomizeBuild) (map[directoryBase]*fil
 	return patternMatchers, nil
 }
 
-func makePatternMatcher(dirBase directoryBase, kustomizeBuild *KustomizeBuild) (*fileutils.PatternMatcher, error) {
+func makePatternMatcher(dirBase directoryBase, kustomizeBuild *KustomizeBuild) (*patternmatcher.PatternMatcher, error) {
 	var sb strings.Builder
 
 	for _, dir := range kustomizeBuild.Spec.Directories {
@@ -158,10 +158,10 @@ func makePatternMatcher(dirBase directoryBase, kustomizeBuild *KustomizeBuild) (
 		return nil, err
 	}
 
-	return fileutils.NewPatternMatcher(patterns)
+	return patternmatcher.New(patterns)
 }
 
-func runKustomizations(patternMatchers map[directoryBase]*fileutils.PatternMatcher) ([][]byte, error) {
+func runKustomizations(patternMatchers map[directoryBase]*patternmatcher.PatternMatcher) ([][]byte, error) {
 	fileSystem := filesys.MakeFsOnDisk()
 
 	kustomizationPath, exists := os.LookupEnv(kustomizePluginConfigRootEnv)
