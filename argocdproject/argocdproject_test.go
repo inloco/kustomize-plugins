@@ -50,7 +50,7 @@ var _ = ginkgo.Describe("ArgoCDProject", func() {
 							Name: "github-checker-app",
 						},
 						Spec: argov1alpha1.ApplicationSpec{
-							Source: argov1alpha1.ApplicationSource{
+							Source: &argov1alpha1.ApplicationSource{
 								RepoURL: "https://github.com/inloco/github-checker.git",
 							},
 							Destination: argov1alpha1.ApplicationDestination{
@@ -109,7 +109,7 @@ var _ = ginkgo.Describe("ArgoCDProject", func() {
 							Name: "github-checker-app",
 						},
 						Spec: argov1alpha1.ApplicationSpec{
-							Source: argov1alpha1.ApplicationSource{
+							Source: &argov1alpha1.ApplicationSource{
 								RepoURL:        "https://github.com/inloco/github-checker.git",
 								Path:           "namespaces/example/environment-overlays/env/cluster-overlays/cluster",
 								TargetRevision: "HEAD",
@@ -125,7 +125,7 @@ var _ = ginkgo.Describe("ArgoCDProject", func() {
 							Name: "another-checker-app",
 						},
 						Spec: argov1alpha1.ApplicationSpec{
-							Source: argov1alpha1.ApplicationSource{
+							Source: &argov1alpha1.ApplicationSource{
 								RepoURL:        "https://github.com/inloco/another-checker.git",
 								Path:           "namespaces/example/environment-overlays/env/cluster-overlays/cluster",
 								TargetRevision: "HEAD",
@@ -266,11 +266,11 @@ func ArgoCDProject(argoCDProject main.ArgoCDProject) {
 				"ObjectMeta": g.Equal(argoCdProjectApp.ObjectMeta),
 				"Spec": gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
 					"Project": g.Equal(argoCDProject.Name),
-					"Source": gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+					"Source": gstruct.PointTo(gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
 						"RepoURL":        g.Equal(argoCdProjectApp.Spec.Source.RepoURL),
 						"Path":           specSourcePathMatcher,
 						"TargetRevision": specSourceTargetRevisionMatcher,
-					}),
+					})),
 					"Destination": g.Equal(argoCdProjectApp.Spec.Destination),
 				}),
 			}))
