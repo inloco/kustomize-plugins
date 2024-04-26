@@ -3,7 +3,7 @@ module github.com/inloco/kustomize-plugins
 go 1.21
 
 require (
-	github.com/argoproj/argo-cd/v2 v2.9.12
+	github.com/argoproj/argo-cd/v2 v2.9.13
 	github.com/moby/buildkit v0.12.5
 	github.com/moby/patternmatcher v0.6.0
 	github.com/onsi/ginkgo/v2 v2.11.0
