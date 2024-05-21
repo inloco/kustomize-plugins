@@ -3,7 +3,7 @@ module github.com/inloco/kustomize-plugins
 go 1.21
 
 require (
-	github.com/argoproj/argo-cd/v2 v2.9.12
+	github.com/argoproj/argo-cd/v2 v2.9.15
 	github.com/moby/buildkit v0.12.5
 	github.com/moby/patternmatcher v0.6.0
 	github.com/onsi/ginkgo/v2 v2.11.0
@@ -57,7 +57,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/gnostic v0.6.9 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
@@ -97,7 +97,7 @@ require (
 	github.com/russross/blackfriday v1.6.0 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/skeema/knownhosts v1.2.1 // indirect
+	github.com/skeema/knownhosts v1.2.2 // indirect
 	github.com/spf13/cobra v1.7.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/vmihailenco/go-tinylfu v0.2.2 // indirect
