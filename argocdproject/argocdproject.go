@@ -216,7 +216,9 @@ func makeApplications(argocdProject *ArgoCDProject) ([][]byte, error) {
 		app.Spec.Project = argocdProject.Name
 
 		if argocdProject.Spec.Environment != "" {
-			app.Spec.Source.Path = fmt.Sprintf("./k8s/overlays/%s", argocdProject.Spec.Environment)
+			if app.Spec.Source.Path == "" {
+				app.Spec.Source.Path = fmt.Sprintf("./k8s/overlays/%s", argocdProject.Spec.Environment)
+			}
 			app.Spec.Source.TargetRevision = fmt.Sprintf("env-%s", argocdProject.Spec.Environment)
 		}
 
